@@ -1,7 +1,6 @@
 package org.swizframework.processors
 {
 	import flash.utils.Dictionary;
-	import flash.utils.getDefinitionByName;
 	
 	import mx.binding.utils.BindingUtils;
 	import mx.binding.utils.ChangeWatcher;
@@ -9,7 +8,6 @@ package org.swizframework.processors
 	import mx.utils.UIDUtil;
 	
 	import org.swizframework.core.Bean;
-	import org.swizframework.core.OutjectBean;
 	import org.swizframework.metadata.InjectMetadataTag;
 	import org.swizframework.reflection.IMetadataTag;
 	import org.swizframework.reflection.MetadataHostClass;
@@ -105,27 +103,29 @@ package org.swizframework.processors
 				}
 				
 				// this is a view added to the display list or a new bean being processed
-				var destObject:Object = getDestinationObject( injectTag, bean );
+				var destObject:Object = ( injectTag.destination == null ) ? bean.source : getDestinationObject( bean.source, injectTag.destination );
 				// name of property that will be bound to a source value
-				var destPropName:String = getDestinationPropertyName( injectTag );
+				var destPropName:* = getDestinationPropertyName( injectTag );
 				
-				// check to see if this is an outjected bean
-				if( namedBean is OutjectBean )
+				var chain:String = injectTag.source.split( "." ).slice( 1 ).toString();
+				var bind:Boolean = injectTag.bind && !( injectTag.host is MetadataHostMethod ) && ChangeWatcher.canWatch( namedBean.source, chain );
+				
+				// if injecting by name simply assign the bean's current value
+				// as there is no context to create a binding
+				if( injectTag.source.indexOf( "." ) < 0 )
 				{
-					addPropertyBinding( destObject, destPropName, OutjectBean( namedBean ).parentBean.source, [ OutjectBean( namedBean ).outjectedPropName ], injectTag.twoWay );
+					setDestinationValue( injectTag, bean, namedBean.source );
+				}
+				else if( !bind )
+				{
+					// if tag specified no binding or property is not bindable, do simple assignment
+					var sourceObject:Object = getDestinationObject( namedBean.source, injectTag.source.split( "." ).slice( 1 ).toString() );
+					setDestinationValue( injectTag, bean, sourceObject[ injectTag.source.split( "." ).pop() ] );
 				}
 				else
 				{
-					// if not using dot notation, simply assign the bean's current value
-					if( injectTag.source.indexOf( "." ) < 0 )
-					{
-						setDestinationValue( injectTag, bean, namedBean.source );
-					}
-					else
-					{
-						// if dots present we have to do property injection (and potential binding)
-						addPropertyBinding( destObject, destPropName, namedBean.source, injectTag.source.split( "." ).slice( 1 ), injectTag.twoWay );
-					}
+					// bind to bean property
+					addPropertyBinding( destObject, destPropName, namedBean.source, injectTag.source.split( "." ).slice( 1 ), injectTag.twoWay );
 				}
 			}
 			
@@ -161,26 +161,19 @@ package org.swizframework.processors
 		/**
 		 *
 		 */
-		protected function getDestinationObject( injectTag:InjectMetadataTag, bean:Bean ):Object
+		protected function getDestinationObject( destObject:Object, chainString:String ):Object
 		{
-			if( injectTag.destination == null )
-			{
-				return bean.source;
-			}
-			else
-			{
-				var arr:Array = injectTag.destination.split( "." );
-				var dest:Object = bean.source;
-				while( arr.length > 1 )
-					dest = dest[ arr.shift() ];
-				return dest;
-			}
+			var arr:Array = chainString.split( "." );
+			var dest:Object = destObject;
+			while( arr.length > 1 )
+				dest = dest[ arr.shift() ];
+			return dest;
 		}
 		
 		/**
 		 *
 		 */
-		protected function getDestinationPropertyName( injectTag:InjectMetadataTag ):String
+		protected function getDestinationPropertyName( injectTag:InjectMetadataTag ):*
 		{
 			if( injectTag.destination == null )
 			{
@@ -225,7 +218,10 @@ package org.swizframework.processors
 			var setterInjection:Boolean = injectTag.host is MetadataHostMethod;
 			var targetType:Class = ( setterInjection ) ? MethodParameter( MetadataHostMethod( injectTag.host ).parameters[ 0 ] ).type : injectTag.host.type;
 			if( targetType == null && injectTag.host is MetadataHostClass )
-				targetType = getDefinitionByName( injectTag.host.name ) as Class;
+			{
+				// targetType = getDefinitionByName( injectTag.host.name ) as Class;
+				targetType = swiz.domain.getDefinition( injectTag.host.name ) as Class;
+			}
 			var typedBean:Bean = getBeanByType( targetType );
 			
 			if( typedBean )
@@ -256,8 +252,8 @@ package org.swizframework.processors
 		{
 			var setterInjection:Boolean = injectTag.host is MetadataHostMethod;
 			
-			var destObject:Object = getDestinationObject( injectTag, bean );
-			var destPropName:String = getDestinationPropertyName( injectTag );
+			var destObject:Object = ( injectTag.destination == null ) ? bean.source : getDestinationObject( bean.source, injectTag.destination );
+			var destPropName:* = getDestinationPropertyName( injectTag );
 			
 			if( setterInjection )
 			{
@@ -298,38 +294,31 @@ package org.swizframework.processors
 			
 			// get the uid of our view/new bean
 			uid = UIDUtil.getUID( destObject );
-			// TODO: need to make sure all parties are bindable?
-			// create the binding
-			cw = BindingUtils.bindProperty( destObject, destPropName, sourceObject, sourcePropertyChain );
 			// create an array to store bindings for this object if one does not already exist
 			injectByProperty[ uid ] ||= [];
-			// store this binding
-			injectByProperty[ uid ].push( cw );
+			// create and store this binding
+			injectByProperty[ uid ].push( BindingUtils.bindProperty( destObject, destPropName, sourceObject, sourcePropertyChain ) );
 			
 			// if twoWay binding was requested we have to do things in reverse
 			// meaning the existing bean's property will also be bound to the view/new bean's property
 			if( twoWay )
 			{
-				// TODO: this assumes a dot path exists. fix.
-				var arr:Array = sourcePropertyChain;
 				// walk the object chain to reach the actual destination object
-				while( arr.length > 1 )
-					sourceObject = sourceObject[ arr.shift() ];
+				while( sourcePropertyChain.length > 1 )
+					sourceObject = sourceObject[ sourcePropertyChain.shift() ];
 				// the last token of the source attribute is the actual property name
-				var sourcePropName:String = arr[ 0 ];
+				var sourcePropName:String = sourcePropertyChain[ 0 ];
 				
 				// create the reverse binding where the view/new bean is the source
 				// TODO: store this binding too
-				//if( injectTag.destination != null )
-				if( true )
+				if( ChangeWatcher.canWatch( destObject, destPropName ) )
 				{
 					// if a destination was provided we can use it as the host chain value
 					BindingUtils.bindProperty( sourceObject, sourcePropName, destObject, destPropName );
 				}
 				else
 				{
-					// if no destination was provided we use the name of the decorated property as the host chain value
-					//BindingUtils.bindProperty( destObject, destPropName, destinationBean.source, injectTag.host.name );
+					logger.error( "Cannot create twoWay binding for {0} property on {1} because it is not bindable.", destPropName, destObject );
 				}
 			}
 		}
