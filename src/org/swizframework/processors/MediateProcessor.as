@@ -7,7 +7,7 @@ package org.swizframework.processors
 	
 	import org.swizframework.core.Bean;
 	import org.swizframework.metadata.MediateMetadataTag;
-	import org.swizframework.metadata.MediateQueue;
+	import org.swizframework.metadata.Mediator;
 	import org.swizframework.reflection.ClassConstant;
 	import org.swizframework.reflection.Constant;
 	import org.swizframework.reflection.IMetadataTag;
@@ -72,8 +72,8 @@ package org.swizframework.processors
 			{
 				if( mediateTag.event.substr( -2 ) == ".*" )
 				{
-					var clazz:Class = ClassConstant.getClass( mediateTag.event, swiz.config.eventPackages );
-					var td:TypeDescriptor = TypeCache.getTypeDescriptor( clazz );
+					var clazz:Class = ClassConstant.getClass( swiz.domain, mediateTag.event, swiz.config.eventPackages );
+					var td:TypeDescriptor = TypeCache.getTypeDescriptor( swiz.domain, clazz );
 					for each( var constant:Constant in td.constants )
 						addMediatorByEventType( mediateTag, bean.source[ mediateTag.host.name ], constant.value );
 				}
@@ -109,12 +109,12 @@ package org.swizframework.processors
 		 */
 		protected function addMediatorByEventType( mediateTag:MediateMetadataTag, method:Function, eventType:String ):void
 		{
-			var mediator:MediateQueue = new MediateQueue( mediateTag, method );
+			var mediator:Mediator = new Mediator( mediateTag, method );
 			
 			mediatorsByEventType[ eventType ] ||= [];
 			mediatorsByEventType[ eventType ].push( mediator );
 			
-			swiz.dispatcher.addEventListener( eventType, mediator.mediate, false, mediateTag.priority, true );
+			swiz.dispatcher.addEventListener( eventType, mediator.mediate, mediateTag.useCapture, mediateTag.priority, true );
 			logger.debug( "MediateProcessor added listener to dispatcher for {0}, {1}", eventType, String( mediator.method ) );
 		}
 		
@@ -126,11 +126,11 @@ package org.swizframework.processors
 			if( mediatorsByEventType[ eventType ] is Array )
 			{
 				var mediatorIndex:int = 0;
-				for each( var mediator:MediateQueue in mediatorsByEventType[ eventType ] )
+				for each( var mediator:Mediator in mediatorsByEventType[ eventType ] )
 				{
 					if( mediator.method == method )
 					{
-						swiz.dispatcher.removeEventListener( eventType, mediator.mediate, false );
+						swiz.dispatcher.removeEventListener( eventType, mediator.mediate, mediateTag.useCapture );
 						
 						mediatorsByEventType[ eventType ].splice( mediatorIndex, 1 );
 						break;
@@ -160,7 +160,7 @@ package org.swizframework.processors
 		{
 			if( swiz.config.strict && ClassConstant.isClassConstant( value ) )
 			{
-				return ClassConstant.getConstantValue( ClassConstant.getClass( value, swiz.config.eventPackages ), ClassConstant.getConstantName( value ) );
+				return ClassConstant.getConstantValue( swiz.domain, ClassConstant.getClass( swiz.domain, value, swiz.config.eventPackages ), ClassConstant.getConstantName( value ) );
 			}
 			else
 			{
@@ -182,12 +182,12 @@ package org.swizframework.processors
 			
 			if( ClassConstant.isClassConstant( mediator.event ) )
 			{
-				var eventClass:Class = ClassConstant.getClass( mediator.event, swiz.config.eventPackages );
+				var eventClass:Class = ClassConstant.getClass( swiz.domain, mediator.event, swiz.config.eventPackages );
 				
 				if( eventClass == null )
 					throw new Error( "Could not get a reference to class for " + mediator.event + ". Did you specify its package in SwizConfig::eventPackages?" );
 				
-				var descriptor:TypeDescriptor = TypeCache.getTypeDescriptor( eventClass );
+				var descriptor:TypeDescriptor = TypeCache.getTypeDescriptor( swiz.domain, eventClass );
 				
 				// TODO: Support DynamicEvent (skip validation) and Event subclasses (enforce validation).
 				// TODO: flash.events.Event is returning 'true' for isDynamic - figure out workaround?

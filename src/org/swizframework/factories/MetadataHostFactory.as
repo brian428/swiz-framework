@@ -1,9 +1,12 @@
 package org.swizframework.factories
 {
+	import flash.system.ApplicationDomain;
+	
 	import org.swizframework.reflection.IMetadataHost;
 	import org.swizframework.reflection.MetadataHostClass;
 	import org.swizframework.reflection.MetadataHostMethod;
 	import org.swizframework.reflection.MetadataHostProperty;
+	import org.swizframework.reflection.MethodParameter;
 	
 	/**
 	 * Simple factory to create the different kinds of metadata
@@ -12,8 +15,11 @@ package org.swizframework.factories
 	 */
 	public class MetadataHostFactory
 	{
-		public function MetadataHostFactory()
+		private var domain:ApplicationDomain;
+		
+		public function MetadataHostFactory( domain:ApplicationDomain )
 		{
+			this.domain = domain;
 		}
 		
 		/**
@@ -34,10 +40,31 @@ package org.swizframework.factories
 			// property, method or class?
 			var hostKind:String = hostNode.name();
 			
-			// actual type is determined by metadata's parent tag
-			host = ( hostKind == "method" ) ? new MetadataHostMethod( hostNode )
-				: ( hostKind == "type" ) ? new MetadataHostClass( hostNode )
-				: new MetadataHostProperty( hostNode );
+			if( hostKind == "type" )
+			{
+				host = new MetadataHostClass();
+				host.type = domain.getDefinition( hostNode.@name.toString() ) as Class;
+			}
+			else if( hostKind == "method" )
+			{
+				host = new MetadataHostMethod();
+				
+				if( hostNode.@returnType != "void" && hostNode.@returnType != "*" )
+				{
+					MetadataHostMethod( host ).returnType = Class( domain.getDefinition( hostNode.@returnType ) );
+				}
+				
+				for each( var pNode:XML in hostNode.parameter )
+				{
+					var pType:Class = pNode.@type == "*" ? Object : Class( domain.getDefinition( pNode.@type ) );
+					MetadataHostMethod( host ).parameters.push( new MethodParameter( int( pNode.@index ), pType, pNode.@optional == "true" ) );
+				}
+			}
+			else
+			{
+				host = new MetadataHostProperty();
+				host.type = hostNode.@type == "*" ? Object : Class( domain.getDefinition( hostNode.@type ) );
+			}
 			
 			host.name = ( hostNode.@uri == undefined ) ? hostNode.@name : new QName( hostNode.@uri, hostNode.@name );
 			

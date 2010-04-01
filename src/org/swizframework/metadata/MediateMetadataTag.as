@@ -23,11 +23,6 @@ package org.swizframework.metadata
 		protected var _properties:Array;
 		
 		/**
-		 * Backing variable for read-only <code>view</code> property.
-		 */
-		protected var _view:Boolean = false;
-		
-		/**
 		 * Backing variable for read-only <code>priority</code> property.
 		 */
 		protected var _priority:int = 0;
@@ -42,6 +37,11 @@ package org.swizframework.metadata
 		 */
 		protected var _stopImmediatePropagation:Boolean = false;
 		
+		/**
+		 * Backing variable for read-only <code>useCapture</code> property.
+		 */
+		protected var _useCapture:Boolean = false;
+
 		// ========================================
 		// public properties
 		// ========================================
@@ -68,20 +68,8 @@ package org.swizframework.metadata
 		}
 		
 		/**
-		 * Returns view attribute of [Mediate] tag as a <code>Boolean</code>.
-		 * If true instructs Swiz to create a listener on the specified view
-		 * type whenever one is added to the display list.
-		 *
-		 * @default false
-		 */
-		public function get view():Boolean
-		{
-			return _view;
-		}
-		
-		/**
 		 * Returns priority attribute of [Mediate] tag.
-		 * Synonymous to the priority argument of <code>flash.events.addEventListener</code>.
+		 * Synonymous to the priority argument of <code>flash.events.IEventDispatcher.addEventListener()</code>.
 		 */
 		public function get priority():int
 		{
@@ -90,7 +78,7 @@ package org.swizframework.metadata
 		
 		/**
 		 * Returns stopPropagation attribute of [Mediate] tag as a <code>Boolean</code>.
-		 * Synonymous to the stopPropagation argument of <code>flash.events.addEventListener</code>.
+		 * Synonymous to the stopPropagation method of <code>flash.events.Event</code>.
 		 *
 		 * @default false
 		 */
@@ -101,13 +89,24 @@ package org.swizframework.metadata
 		
 		/**
 		 * Returns stopImmediatePropagation attribute of [Mediate] tag as a <code>Boolean</code>.
-		 * Synonymous to the stopImmediatePropagation argument of <code>flash.events.addEventListener</code>.
+		 * Synonymous to the stopImmediatePropagation method of <code>flash.events.Event</code>.
 		 *
 		 * @default false
 		 */
 		public function get stopImmediatePropagation():Boolean
 		{
 			return _stopImmediatePropagation;
+		}
+
+		/**
+		 * Returns useCapture attribute of [Mediate] tag as a <code>Boolean</code>.
+		 * Synonymous to the useCapture argument of <code>flash.events.IEventDispatcher.addEventListener()</code>.
+		 *
+		 * @default false
+		 */
+		public function get useCapture():Boolean
+		{
+			return _useCapture;
 		}
 		
 		// ========================================
@@ -142,9 +141,6 @@ package org.swizframework.metadata
 			if( hasArg( "properties" ) )
 				_properties = getArg( "properties" ).value.replace( /\ /g, "" ).split( "," );
 			
-			if( hasArg( "view" ) )
-				_view = getArg( "view" ).value == "true";
-			
 			if( hasArg( "priority" ) )
 				_priority = int( getArg( "priority" ).value );
 			
@@ -153,6 +149,9 @@ package org.swizframework.metadata
 			
 			if( hasArg( "stopImmediatePropagation" ) )
 				_stopImmediatePropagation = getArg( "stopImmediatePropagation" ).value == "true";
+
+			if( hasArg( "useCapture" ) )
+				_useCapture = getArg( "useCapture" ).value == "true";
 		}
 	}
 }

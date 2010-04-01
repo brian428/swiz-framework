@@ -1,7 +1,5 @@
 package org.swizframework.reflection
 {
-	import flash.utils.getDefinitionByName;
-	
 	/**
 	 * Representation of a method that has been decorated with metadata.
 	 */
@@ -33,6 +31,11 @@ package org.swizframework.reflection
 			return _returnType;
 		}
 		
+		public function set returnType( value:Class ):void
+		{
+			_returnType = value;
+		}
+		
 		[ArrayElementType( "org.swizframework.reflection.MethodParameter" )]
 		
 		/**
@@ -54,19 +57,9 @@ package org.swizframework.reflection
 		 *
 		 * @param hostNode XML node from <code>describeType</code> output that represents this method.
 		 */
-		public function MetadataHostMethod( hostNode:XML )
+		public function MetadataHostMethod()
 		{
 			super();
-			
-			if( hostNode.@returnType != "void" && hostNode.@returnType != "*" )
-				_returnType = Class( getDefinitionByName( hostNode.@returnType ) );
-			
-			for each( var pNode:XML in hostNode.parameter )
-			{
-				// Convert * type to Object class, lookup everything else
-				var pType:Class = pNode.@type != "*" ? Class( getDefinitionByName( pNode.@type ) ) : Object;
-				_parameters.push( new MethodParameter( int( pNode.@index ), pType, pNode.@optional == "true" ) );
-			}
 		}
 	}
 }
