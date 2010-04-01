@@ -1,6 +1,7 @@
 package org.swizframework
 {
 	import flash.events.Event;
+	import flash.system.ApplicationDomain;
 	
 	import mx.core.Container;
 	
@@ -105,7 +106,7 @@ package org.swizframework
 			// wrap the source in a Bean definition
 			var bean:Bean = new Bean();
 			bean.source = sourceInstance;
-			bean.typeDescriptor = TypeCache.getTypeDescriptor( bean.type );
+			bean.typeDescriptor = TypeCache.getTypeDescriptor( ApplicationDomain.currentDomain, bean.type );
 			bean.name = name;
 			
 			// initialize bean to trigger inject, register mediators, etc.

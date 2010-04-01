@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" width="100%" height="100%">
+<mx:Canvas xmlns:mx="library://ns.adobe.com/flex/mx" xmlns:fx="http://ns.adobe.com/mxml/2009" width="100%" height="100%">
 	
-	<mx:Metadata>
+	<fx:Metadata>
 		[Event("genericEvent")]
-	</mx:Metadata>
+		[Inject(source="simpleController.name", destination="label")]
+	</fx:Metadata>
 	
-	<mx:Script>
+	<fx:Script>
 		<![CDATA[
 			import org.swizframework.testable.control.SimpleController;
 			import org.swizframework.testable.event.SimpleTestEvent;
@@ -16,11 +17,11 @@
 			[Inject("simpleController")]
 			public var namedController : Object;
 			
-			[Inject("controllerName")]
+			[Inject(source="simpleController.name")]
 			[Bindable]
 			public var controllerName : String;
 			
-			[Inject(source="simpleController.name", destination="label")]
+			
 			
 			public function dispatchSimpleEvent() : void
 			{
@@ -30,6 +31,6 @@
 			}
 			
 		]]>
-	</mx:Script>
+	</fx:Script>
 	
 </mx:Canvas>
