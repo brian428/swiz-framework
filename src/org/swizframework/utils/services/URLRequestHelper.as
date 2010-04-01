@@ -5,11 +5,11 @@ package org.swizframework.utils.services
 	import org.swizframework.core.ISwiz;
 	import org.swizframework.core.ISwizAware;
 	
-	public class URLRequestUtil implements ISwizAware
+	public class URLRequestHelper implements ISwizAware
 	{
 		private var _swiz:ISwiz;
 		
-		public function URLRequestUtil()
+		public function URLRequestHelper()
 		{
 		}
 		

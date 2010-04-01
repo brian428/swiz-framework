@@ -10,7 +10,7 @@ package org.swizframework.utils.services
 	import mx.rpc.events.ResultEvent;
 	import mx.managers.CursorManager;
 	
-	public class MockDelegateUtil
+	public class MockDelegateHelper
 	{
 		public var token:AsyncToken;
 		public var timer:Timer;
@@ -23,7 +23,7 @@ package org.swizframework.utils.services
 		 */
 		public var showBusyCursor:Boolean;
 		
-		public function MockDelegateUtil( showBusyCursor:Boolean = false )
+		public function MockDelegateHelper( showBusyCursor:Boolean = false )
 		{
 			this.showBusyCursor = showBusyCursor;
 		}
