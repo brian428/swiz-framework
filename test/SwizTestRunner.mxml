@@ -19,6 +19,7 @@
 			
 			import testSuites.ReflectionTestsSuite;
 			import testSuites.StorageTestSuite;
+			import testSuites.SwizTestSuite;
 			
 			private var core:FlexUnitCore;
 			
@@ -39,7 +40,7 @@
 				//core.addListener( TextListener.getDefaultTextListener( LogEventLevel.DEBUG ) ); // For Flex Projects
 				
 				//core.run( ReflectionTestsSuite );
-				core.run( StorageTestSuite );
+				core.run( SwizTestSuite, ReflectionTestsSuite, StorageTestSuite );
 			}
 		]]>
 	</fx:Script>

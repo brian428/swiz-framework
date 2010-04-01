@@ -6,7 +6,6 @@ package org.swizframework.testable.control
 	{
 		public static const CONTROLLER_NAME : String = "A Simple Controller";
 		
-		[Outject("controllerName")]
 		[Bindable]
 		public var name : String;
 		
