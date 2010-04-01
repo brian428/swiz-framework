@@ -1,6 +1,7 @@
 package org.swizframework.core.mxml
 {
 	import flash.events.Event;
+	import flash.events.IEventDispatcher;
 	
 	import mx.events.FlexEvent;
 	
@@ -10,62 +11,72 @@ package org.swizframework.core.mxml
 	import org.fluint.uiImpersonation.*;
 	import org.swizframework.AbstractSwizFrameworkTest;
 	import org.swizframework.core.*;
+	import org.swizframework.reflection.TypeCache;
+	import org.swizframework.testable.RootContainer;
 	import org.swizframework.testable.control.SimpleController;
 	import org.swizframework.testable.event.SimpleTestEvent;
 	import org.swizframework.testable.view.SimpleCanvas;
+	import org.swizframework.utils.test.AutowiredTestCase;
 	
-	public class SwizTest extends AbstractSwizFrameworkTest
+	public class SwizTest
 	{
+		protected static var LONG_TIME:int = 500;
+		private var rootContainer : RootContainer;
 		
-		[Test(async)]
-		public function testSwizDispatcherSet() : void 
+		[Before(async,ui)]
+		public function createRootContainer() : void
 		{
-			Assert.assertTrue( "Swiz does not have correct dispatcher instance", swiz.dispatcher == ui );	
+			rootContainer = new RootContainer();
+			Async.proceedOnEvent( this, rootContainer, Event.ADDED_TO_STAGE, LONG_TIME );
+			UIImpersonator.addChild( rootContainer );
+			createBeanForTest();
+		}
+		
+		[After(async,ui)]
+		public function destroyRootContainer() : void
+		{
+			UIImpersonator.removeAllChildren();
+			rootContainer = null;
 		}
 		
 		[Test(async)]
 		public function testSwizMediatesViewEvent() : void 
 		{
-			Async.handleEvent( this, ui, SimpleTestEvent.GENERIC_RESULT_EVENT, compareEventDataToPassThroughEventName, LONG_TIME, {eventName:SimpleTestEvent.GENERIC_EVENT} ); 
-			ui.dispatchEvent( createSimpleTestEvent( SimpleTestEvent.GENERIC_EVENT, SimpleTestEvent.GENERIC_EVENT ) );
+			Async.handleEvent( this, rootContainer, SimpleTestEvent.GENERIC_RESULT_EVENT, compareEventDataToPassThroughEventName, LONG_TIME, {eventName:SimpleTestEvent.GENERIC_EVENT} ); 
+			rootContainer.dispatchEvent( createSimpleTestEvent( SimpleTestEvent.GENERIC_EVENT, SimpleTestEvent.GENERIC_EVENT ) );
 		}
 		
 		[Test(async,ui)]
 		public function testSwizMediatesChildViewEvent() : void
 		{
-			var simpleCanvas : SimpleCanvas = new SimpleCanvas();
-			Async.handleEvent( this, ui, SimpleTestEvent.GENERIC_RESULT_EVENT, compareEventDataToPassThroughEventName, LONG_TIME, {eventName:SimpleTestEvent.GENERIC_EVENT} ); 
-			UIImpersonator.addChild( simpleCanvas );		
+			var simpleCanvas : SimpleCanvas = rootContainer.simpleCanvas;
+			Async.handleEvent( this, rootContainer, SimpleTestEvent.GENERIC_RESULT_EVENT, compareEventDataToPassThroughEventName, LONG_TIME, {eventName:SimpleTestEvent.GENERIC_EVENT} ); 	
 			simpleCanvas.dispatchSimpleEvent();
 		}
 		
 		[Test(async,ui)]
 		public function testSwizInjectIntoView() : void
 		{
-			var simpleCanvas : SimpleCanvas = new SimpleCanvas();
-			Async.handleEvent( this, simpleCanvas, Event.ADDED_TO_STAGE, checkInject, LONG_TIME, {component:simpleCanvas} ); 
-			UIImpersonator.addChild( simpleCanvas );		
+			var simpleCanvas : SimpleCanvas = rootContainer.simpleCanvas;
+			Assert.assertTrue( "View component did not have controller injected by type", simpleCanvas.controller is SimpleController );
+			Assert.assertTrue( "View component did not have controller injected by name", simpleCanvas.namedController is SimpleController );
+			Assert.assertTrue( "Controller name property was not correctly set during [PostConstruct]", simpleCanvas.controller.name == SimpleController.CONTROLLER_NAME );
+			Assert.assertTrue( "View component did not have outjected controller property injected", simpleCanvas.controllerName == SimpleController.CONTROLLER_NAME );
+			Assert.assertTrue( "View component did not have controller property injected into Canvas label property", simpleCanvas.label == SimpleController.CONTROLLER_NAME );	
 		}
 		
 		[Test(async)]
 		public function testSwizIDispatcherAware() : void 
 		{
-			Assert.assertTrue( "Controller implementing IDispatcherAware does not have correct dispatcher instance", SimpleController( Bean( swiz.beanFactory.getBeanByName( "simpleController" ) ).source ).dispatcher == ui );	
+			var simpleCanvas : SimpleCanvas = rootContainer.simpleCanvas;
+			Assert.assertTrue( "Controller implementing IDispatcherAware does not have correct dispatcher instance", simpleCanvas.controller.dispatcher is IEventDispatcher );	
 		}
 		
 		[Test(async)]
 		public function testSwizISwizAware() : void 
 		{
-			Assert.assertTrue( "Controller implementing ISwizAware does not have correct Swiz instance", SimpleController( Bean( swiz.beanFactory.getBeanByName( "simpleController" ) ).source )._swiz == swiz );	
-		}
-		
-		protected function checkInject( event : Event, passThroughData : Object ) : void
-		{
-			Assert.assertTrue( "View component did not have controller injected by type", SimpleCanvas( passThroughData.component ).controller is SimpleController );
-			Assert.assertTrue( "View component did not have controller injected by name", SimpleCanvas( passThroughData.component ).namedController is SimpleController );
-			Assert.assertTrue( "Controller name property was not correctly set during [PostConstruct]", SimpleCanvas( passThroughData.component ).controller.name == SimpleController.CONTROLLER_NAME );
-			Assert.assertTrue( "View component did not have outjected controller property injected", SimpleCanvas( passThroughData.component ).controllerName == SimpleController.CONTROLLER_NAME );
-			Assert.assertTrue( "View component did not have controller property injected into Canvas label property", SimpleCanvas( passThroughData.component ).label == SimpleController.CONTROLLER_NAME );
+			var simpleCanvas : SimpleCanvas = rootContainer.simpleCanvas;
+			Assert.assertTrue( "Controller implementing ISwizAware does not have correct Swiz instance", simpleCanvas.controller._swiz is ISwiz );	
 		}
 		
 		protected function compareEventDataToPassThroughEventName( event : SimpleTestEvent, passThroughData : Object ) : void
@@ -76,7 +87,7 @@ package org.swizframework.core.mxml
 		[Mediate( event="SimpleTestEvent.GENERIC_EVENT", properties="data" )]
 		public function genericMediatorWithData( data : Object ) : void 
 		{
-			ui.dispatchEvent( createSimpleTestEvent( SimpleTestEvent.GENERIC_RESULT_EVENT, data ) );
+			rootContainer.dispatchEvent( createSimpleTestEvent( SimpleTestEvent.GENERIC_RESULT_EVENT, data ) );
 		}
 		
 		protected function createSimpleTestEvent( eventName : String, data : Object = null ) : SimpleTestEvent
@@ -84,6 +95,19 @@ package org.swizframework.core.mxml
 			var newEvent : SimpleTestEvent = new SimpleTestEvent( eventName );
 			newEvent.data = data;
 			return newEvent;
+		}
+		
+		protected function createBeanForTest() : void
+		{
+			var swiz : org.swizframework.core.mxml.Swiz = rootContainer.mySwiz;
+			
+			// wrap the unit test in a Bean definition
+			var bean:Bean = new Bean();
+			bean.source = this;
+			bean.typeDescriptor = TypeCache.getTypeDescriptor( swiz.domain, bean.type );
+			
+			// autowire test case with bean factory
+			swiz.beanFactory.setUpBean( bean );
 		}
 		
 	}
