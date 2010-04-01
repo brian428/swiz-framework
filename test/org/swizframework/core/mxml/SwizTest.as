@@ -40,6 +40,12 @@ package org.swizframework.core.mxml
 		}
 		
 		[Test(async)]
+		public function testSwizDispatcherSet() : void 
+		{
+			Assert.assertTrue( "Swiz does not have correct dispatcher instance", rootContainer.mySwiz.dispatcher == rootContainer );	
+		}
+		
+		[Test(async)]
 		public function testSwizMediatesViewEvent() : void 
 		{
 			Async.handleEvent( this, rootContainer, SimpleTestEvent.GENERIC_RESULT_EVENT, compareEventDataToPassThroughEventName, LONG_TIME, {eventName:SimpleTestEvent.GENERIC_EVENT} ); 
