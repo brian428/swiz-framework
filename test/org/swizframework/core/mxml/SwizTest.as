@@ -9,7 +9,6 @@ package org.swizframework.core.mxml
 	import org.flexunit.async.Async;
 	import org.fluint.sequence.*;
 	import org.fluint.uiImpersonation.*;
-	import org.swizframework.AbstractSwizFrameworkTest;
 	import org.swizframework.core.*;
 	import org.swizframework.reflection.TypeCache;
 	import org.swizframework.testable.RootContainer;
@@ -110,7 +109,7 @@ package org.swizframework.core.mxml
 			// wrap the unit test in a Bean definition
 			var bean:Bean = new Bean();
 			bean.source = this;
-			bean.typeDescriptor = TypeCache.getTypeDescriptor( swiz.domain, bean.type );
+			bean.typeDescriptor = TypeCache.getTypeDescriptor( bean.type, swiz.domain );
 			
 			// autowire test case with bean factory
 			swiz.beanFactory.setUpBean( bean );
