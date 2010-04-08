@@ -13,10 +13,16 @@ package org.swizframework.core
 		// ========================================
 		
 		/**
-		 * Dispatcher
+		 * Local Dispatcher
 		 */
 		function get dispatcher():IEventDispatcher;
 		function set dispatcher( value:IEventDispatcher ):void;
+		
+		/**
+		 * Global Dispatcher
+		 */
+		function get globalDispatcher():IEventDispatcher;
+		function set globalDispatcher( value:IEventDispatcher ):void;
 		
 		/**
 		 * Domain
@@ -50,6 +56,7 @@ package org.swizframework.core
 		 * Processors
 		 */
 		function get processors():Array;
+		function setProcessors( value:Array ):void;
 		
 		/**
 		 * Custom Processors

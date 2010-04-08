@@ -54,21 +54,6 @@ package org.swizframework.core
 		function set setUpEventPhase( value:uint ):void;
 		
 		/**
-		 * The optional <code>setUpMarkerFunction</code> property specifies a function that Swiz will call when
-		 * handling an injection event to evaluate whether to process metadata on the associated object instance.
-		 * Advanced developers can use this property to specify a function to detect 'marker' properties or interfaces.
-		 *
-		 * This function should conform to the following signature:
-		 * <code>f( instance:Object ):Boolean</code>
-		 * where the return value is true if the specified instance should be processed for metadata.
-		 *
-		 * @param setUpMarkerFunction The function that will perform evaluation.
-		 * @default null
-		 */
-		function get setUpMarkerFunction():Function;
-		function set setUpMarkerFunction( value:Function ):void;
-		
-		/**
 		 * Swiz will listen for this event and tear down views in response.
 		 * Default value is <code>removedFromStage</code>.
 		 *
@@ -134,5 +119,15 @@ package org.swizframework.core
 		 */
 		function get defaultFaultHandler():Function;
 		function set defaultFaultHandler( faultHandler:Function ):void;
+		
+		/**
+		 * Default Dispatcher to use for all Mediators and Dispatcher injections. Can be overriden 
+		 * with dispatcher property on those metadata tags.
+		 *
+		 * @param dispatcher (global|local) 
+		 * @default null
+		 */
+		function get defaultDispatcher():String;
+		function set defaultDispatcher( dispatcher:String ):void;
 	}
 }

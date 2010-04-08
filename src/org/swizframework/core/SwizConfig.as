@@ -6,6 +6,14 @@ package org.swizframework.core
 	public class SwizConfig implements ISwizConfig
 	{
 		// ========================================
+		// public static constants
+		// ========================================
+		
+		public static const GLOBAL_DISPATCHER:String = "global";
+		
+		public static const LOCAL_DISPATCHER:String = "local";
+		
+		// ========================================
 		// protected static constants
 		// ========================================
 		
@@ -42,11 +50,6 @@ package org.swizframework.core
 		protected var _setUpEventPhase:uint = EventPhase.CAPTURING_PHASE;
 		
 		/**
-		 * Backing variable for the <code>setUpMarkerFunction</code> property.
-		 */
-		protected var _setUpMarkerFunction:Function = null;
-		
-		/**
 		 * Backing variable for the <code>tearDownEvent</code> property.
 		 */
 		protected var _tearDownEventType:String = Event.REMOVED_FROM_STAGE;
@@ -75,6 +78,11 @@ package org.swizframework.core
 		 * Backing variable for the <code>defaultFaultHandler</code> property.
 		 */
 		protected var _defaultFaultHandler:Function;
+		
+		/**
+		 * Backing variable for the <code>defaultDispatcher</code> property.
+		 */
+		protected var _defaultDispatcher:String = GLOBAL_DISPATCHER;
 		
 		// ========================================
 		// public properties
@@ -130,19 +138,6 @@ package org.swizframework.core
 		public function set setUpEventPhase( value:uint ):void
 		{
 			_setUpEventPhase = value;
-		}
-		
-		/**
-		 * @inheritDoc
-		 */
-		public function get setUpMarkerFunction():Function
-		{
-			return _setUpMarkerFunction;
-		}
-		
-		public function set setUpMarkerFunction( value:Function ):void
-		{
-			_setUpMarkerFunction = value;
 		}
 		
 		/**
@@ -221,6 +216,19 @@ package org.swizframework.core
 		public function set defaultFaultHandler( faultHandler:Function ):void
 		{
 			_defaultFaultHandler = faultHandler;
+		}
+		
+		/**
+		 * @inheritDoc
+		 */
+		public function get defaultDispatcher():String
+		{
+			return _defaultDispatcher;
+		}
+		
+		public function set defaultDispatcher( dispatcher:String ):void
+		{
+			_defaultDispatcher = dispatcher;
 		}
 		
 		// ========================================

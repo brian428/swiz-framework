@@ -1,11 +1,13 @@
 package org.swizframework.processors
 {
+	import flash.events.IEventDispatcher;
 	import flash.utils.Dictionary;
 	import flash.utils.getQualifiedClassName;
 	
 	import mx.logging.ILogger;
 	
 	import org.swizframework.core.Bean;
+	import org.swizframework.core.SwizConfig;
 	import org.swizframework.metadata.MediateMetadataTag;
 	import org.swizframework.metadata.Mediator;
 	import org.swizframework.reflection.ClassConstant;
@@ -73,7 +75,7 @@ package org.swizframework.processors
 				if( mediateTag.event.substr( -2 ) == ".*" )
 				{
 					var clazz:Class = ClassConstant.getClass( swiz.domain, mediateTag.event, swiz.config.eventPackages );
-					var td:TypeDescriptor = TypeCache.getTypeDescriptor( swiz.domain, clazz );
+					var td:TypeDescriptor = TypeCache.getTypeDescriptor( clazz, swiz.domain );
 					for each( var constant:Constant in td.constants )
 						addMediatorByEventType( mediateTag, bean.source[ mediateTag.host.name ], constant.value );
 				}
@@ -114,7 +116,17 @@ package org.swizframework.processors
 			mediatorsByEventType[ eventType ] ||= [];
 			mediatorsByEventType[ eventType ].push( mediator );
 			
-			swiz.dispatcher.addEventListener( eventType, mediator.mediate, mediateTag.useCapture, mediateTag.priority, true );
+			var dispatcher:IEventDispatcher = null;
+			
+			// if the mediate tag defines a scope, set proper dispatcher, else use defaults
+			if( mediateTag.scope == SwizConfig.GLOBAL_DISPATCHER )
+				dispatcher = swiz.globalDispatcher;
+			else if( mediateTag.scope == SwizConfig.LOCAL_DISPATCHER )
+				dispatcher = swiz.dispatcher;
+			else
+				dispatcher = swiz.config.defaultDispatcher == SwizConfig.LOCAL_DISPATCHER ? swiz.dispatcher : swiz.globalDispatcher;
+			
+			dispatcher.addEventListener( eventType, mediator.mediate, mediateTag.useCapture, mediateTag.priority, true );
 			logger.debug( "MediateProcessor added listener to dispatcher for {0}, {1}", eventType, String( mediator.method ) );
 		}
 		
@@ -122,7 +134,17 @@ package org.swizframework.processors
 		 * Remove Mediator By Event Type
 		 */
 		protected function removeMediatorByEventType( mediateTag:MediateMetadataTag, method:Function, eventType:String ):void
-		{
+		{	
+			var dispatcher:IEventDispatcher = null;
+			
+			// if the mediate tag defines a scope, set proper dispatcher, else use defaults
+			if( mediateTag.scope == SwizConfig.GLOBAL_DISPATCHER )
+				dispatcher = swiz.globalDispatcher;
+			else if( mediateTag.scope == SwizConfig.LOCAL_DISPATCHER )
+				dispatcher = swiz.dispatcher;
+			else
+				dispatcher = swiz.config.defaultDispatcher == SwizConfig.LOCAL_DISPATCHER ? swiz.dispatcher : swiz.globalDispatcher;
+			
 			if( mediatorsByEventType[ eventType ] is Array )
 			{
 				var mediatorIndex:int = 0;
@@ -130,7 +152,7 @@ package org.swizframework.processors
 				{
 					if( mediator.method == method )
 					{
-						swiz.dispatcher.removeEventListener( eventType, mediator.mediate, mediateTag.useCapture );
+						dispatcher.removeEventListener( eventType, mediator.mediate, mediateTag.useCapture );
 						
 						mediatorsByEventType[ eventType ].splice( mediatorIndex, 1 );
 						break;
@@ -187,7 +209,7 @@ package org.swizframework.processors
 				if( eventClass == null )
 					throw new Error( "Could not get a reference to class for " + mediator.event + ". Did you specify its package in SwizConfig::eventPackages?" );
 				
-				var descriptor:TypeDescriptor = TypeCache.getTypeDescriptor( swiz.domain, eventClass );
+				var descriptor:TypeDescriptor = TypeCache.getTypeDescriptor( eventClass, swiz.domain );
 				
 				// TODO: Support DynamicEvent (skip validation) and Event subclasses (enforce validation).
 				// TODO: flash.events.Event is returning 'true' for isDynamic - figure out workaround?

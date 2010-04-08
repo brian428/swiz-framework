@@ -1,13 +1,12 @@
 package org.swizframework.core
 {
+	import flash.display.LoaderInfo;
 	import flash.events.EventDispatcher;
 	import flash.events.IEventDispatcher;
 	import flash.system.ApplicationDomain;
 	
 	import mx.logging.ILogger;
 	import mx.logging.ILoggingTarget;
-	import mx.modules.Module;
-	import mx.modules.ModuleManager;
 	
 	import org.swizframework.events.SwizEvent;
 	import org.swizframework.processors.DispatcherProcessor;
@@ -35,6 +34,7 @@ package org.swizframework.core
 		protected var logger:ILogger = SwizLogger.getLogger( this );
 		
 		protected var _dispatcher:IEventDispatcher;
+		protected var _globalDispatcher:IEventDispatcher;
 		protected var _domain:ApplicationDomain;
 		
 		protected var _config:ISwizConfig;
@@ -63,6 +63,21 @@ package org.swizframework.core
 			_dispatcher = value;
 			
 			logger.info( "Swiz dispatcher set to {0}", value );
+		}
+		
+		/**
+		 * @inheritDoc
+		 */
+		public function get globalDispatcher():IEventDispatcher
+		{
+			return _globalDispatcher;
+		}
+		
+		public function set globalDispatcher( value:IEventDispatcher ):void
+		{
+			_globalDispatcher = value;
+			
+			logger.info( "Swiz global dispatcher set to {0}", value );
 		}
 		
 		/**
@@ -131,6 +146,13 @@ package org.swizframework.core
 			return _processors;
 		}
 		
+		public function setProcessors( value:Array ):void
+		{
+			_processors = value;
+			logger.warn( "You are overriding the default set of Swiz processors. Please ensure this is what you intended." );
+			logger.warn( "If your intention is to add custom processors you should use the customProcessors property." );
+		}
+		
 		public function set customProcessors( value:Array ):void
 		{
 			if( value != null )
@@ -149,6 +171,11 @@ package org.swizframework.core
 		{
 			_parentSwiz = parentSwiz;
 			_beanFactory.parentBeanFactory = _parentSwiz.beanFactory;
+			
+			if( domain == null )
+				domain = parentSwiz.domain;
+			
+			globalDispatcher = parentSwiz.globalDispatcher;
 			
 			config.eventPackages = config.eventPackages.concat( _parentSwiz.config.eventPackages );
 			config.viewPackages = config.viewPackages.concat( _parentSwiz.config.viewPackages );
@@ -219,7 +246,17 @@ package org.swizframework.core
 			// dispatch a swiz created event before fully initializing
 			dispatchSwizCreatedEvent();
 			
-			findDomain();
+			// set domain if it has not been set
+			if( domain == null )
+			{
+				domain = ApplicationDomain.currentDomain;
+			}
+			
+			// set global dispatcher if a parent wasn't able to set it
+			if( globalDispatcher == null )
+			{
+				globalDispatcher = dispatcher;
+			}
 			
 			constructProviders();
 			
@@ -233,10 +270,10 @@ package org.swizframework.core
 		}
 		
 		// ========================================
-		// private methods
+		// protected methods
 		// ========================================
 		
-		private function initializeProcessors():void
+		protected function initializeProcessors():void
 		{
 			processors.sortOn( "priority" );
 			
@@ -248,26 +285,11 @@ package org.swizframework.core
 			logger.debug( "Processors initialized" );
 		}
 		
-		private function findDomain():void
-		{
-			// if the parent dispatcher is a module, get the application domain from the module manager
-			// if not, we'll try to trust current domain
-			if( dispatcher is Module ) 
-			{
-				var moduleInfo : Object = ModuleManager.getAssociatedFactory( dispatcher ).info();
-				domain = moduleInfo.currentDomain;
-			}
-			else
-			{
-				domain = ApplicationDomain.currentDomain;
-			}
-		}
-		
 		/**
 		 * SwizConfig can accept bean providers as Classes as well as instances. ContructProviders
 		 * ensures that provider is created and initialized before the bean factory accesses them.
 		 */
-		private function constructProviders():void
+		protected function constructProviders():void
 		{
 			var providerClass:Class;
 			var providerInst:IBeanProvider;
@@ -296,10 +318,10 @@ package org.swizframework.core
 		 * Dispatches a Swiz creation event to find parents and attaches a listener to
 		 * find potential children.
 		 */
-		private function dispatchSwizCreatedEvent():void
+		protected function dispatchSwizCreatedEvent():void
 		{
 			// dispatch a creation event to find parents
-			dispatcher.dispatchEvent( new SwizEvent(SwizEvent.CREATED, this) );
+			dispatcher.dispatchEvent( new SwizEvent( SwizEvent.CREATED, this ) );
 			// and attach a listener for children
 			dispatcher.addEventListener( SwizEvent.CREATED, handleSwizCreatedEvent );
 			
@@ -311,7 +333,7 @@ package org.swizframework.core
 		 * as the parent. Relies on display list ordering as a means of conveying parent / child
 		 * relationships. Pure AS projects will need to call setParent explicitly.
 		 */
-		private function handleSwizCreatedEvent(event:SwizEvent):void
+		protected function handleSwizCreatedEvent(event:SwizEvent):void
 		{
 			if( event.swiz != null )
 			{
