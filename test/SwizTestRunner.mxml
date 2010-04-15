@@ -17,6 +17,7 @@
 			import org.flexunit.listeners.UIListener;
 			import org.flexunit.runner.FlexUnitCore;
 			
+			import testSuites.MetadataTestSuite;
 			import testSuites.ReflectionTestsSuite;
 			import testSuites.StorageTestSuite;
 			import testSuites.SwizTestSuite;
@@ -40,7 +41,7 @@
 				//core.addListener( TextListener.getDefaultTextListener( LogEventLevel.DEBUG ) ); // For Flex Projects
 				
 				//core.run( ReflectionTestsSuite );
-				core.run( SwizTestSuite, ReflectionTestsSuite, StorageTestSuite );
+				core.run( SwizTestSuite, ReflectionTestsSuite, StorageTestSuite, MetadataTestSuite );
 			}
 		]]>
 	</fx:Script>

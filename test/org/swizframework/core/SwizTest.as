@@ -175,7 +175,7 @@ package org.swizframework.core
 			// wrap the source in a Bean definition
 			var bean:Bean = new Bean();
 			bean.source = sourceInstance;
-			bean.typeDescriptor = TypeCache.getTypeDescriptor( ApplicationDomain.currentDomain, bean.type );
+			bean.typeDescriptor = TypeCache.getTypeDescriptor( bean.type, ApplicationDomain.currentDomain );
 			bean.name = name;
 			
 			// initialize bean to trigger inject, register mediators, etc.
