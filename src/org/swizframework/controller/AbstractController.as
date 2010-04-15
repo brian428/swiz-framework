@@ -1,3 +1,19 @@
+/*
+ * Copyright 2010 Swiz Framework Contributors
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License. You may obtain a copy of the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
+
 package org.swizframework.controller
 {
 	import flash.events.IEventDispatcher;
@@ -8,8 +24,8 @@ package org.swizframework.controller
 	import org.swizframework.core.IDispatcherAware;
 	import org.swizframework.core.ISwiz;
 	import org.swizframework.core.ISwizAware;
+	import org.swizframework.utils.chain.AsyncChainStepCommand;
 	import org.swizframework.utils.chain.CommandChain;
-	import org.swizframework.utils.chain.SwizCommand;
 	import org.swizframework.utils.services.SwizResponder;
 	import org.swizframework.utils.services.SwizURLRequest;
 	
@@ -66,9 +82,9 @@ package org.swizframework.controller
 		
 		/** Delegates create command to Swiz */
 		protected function createCommand( delayedCall:Function, args:Array, resultHandler:Function,
-			faultHandler:Function = null, eventArgs:Array = null ):SwizCommand
+			faultHandler:Function = null, resultHandlerArgs:Array = null ):AsyncChainStepCommand
 		{
-			return new SwizCommand( delayedCall, args, resultHandler, faultHandler, eventArgs );
+			return new AsyncChainStepCommand( delayedCall, args, resultHandler, faultHandler, resultHandlerArgs );
 		}
 		
 		/** Constructs a dynamic command */

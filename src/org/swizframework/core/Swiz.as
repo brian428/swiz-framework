@@ -1,6 +1,21 @@
+/*
+ * Copyright 2010 Swiz Framework Contributors
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License. You may obtain a copy of the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
+
 package org.swizframework.core
 {
-	import flash.display.LoaderInfo;
 	import flash.events.EventDispatcher;
 	import flash.events.IEventDispatcher;
 	import flash.system.ApplicationDomain;
@@ -16,7 +31,6 @@ package org.swizframework.core
 	import org.swizframework.processors.PostConstructProcessor;
 	import org.swizframework.processors.PreDestroyProcessor;
 	import org.swizframework.processors.SwizInterfaceProcessor;
-	import org.swizframework.reflection.TypeCache;
 	import org.swizframework.utils.SwizLogger;
 	
 	[DefaultProperty( "beanProviders" )]
@@ -215,11 +229,13 @@ package org.swizframework.core
 		// public methods
 		// ========================================
 		
-		public function registerWindow( window:IEventDispatcher ):void
+		public function registerWindow( window:IEventDispatcher, windowSwiz:ISwiz = null ):void
 		{
-			var windowSwiz:Swiz = new Swiz( window );
-			windowSwiz.parentSwiz = this;
-			windowSwiz.init();
+			var newSwiz:ISwiz = ( windowSwiz != null ) ? windowSwiz : new Swiz( window );
+			newSwiz.parentSwiz = this;
+			
+			if( windowSwiz == null )
+				newSwiz.init();
 		}
 		
 		/**
@@ -265,18 +281,6 @@ package org.swizframework.core
 			// dispatch a swiz created event before fully initializing
 			dispatchSwizCreatedEvent();
 			
-			// set domain if it has not been set
-			if( domain == null )
-			{
-				domain = ApplicationDomain.currentDomain;
-			}
-			
-			// set global dispatcher if a parent wasn't able to set it
-			if( globalDispatcher == null )
-			{
-				globalDispatcher = dispatcher;
-			}
-			
 			if( parentSwiz != null )
 			{
 				_beanFactory.parentBeanFactory = _parentSwiz.beanFactory;
@@ -288,6 +292,18 @@ package org.swizframework.core
 				
 				config.eventPackages = config.eventPackages.concat( _parentSwiz.config.eventPackages );
 				config.viewPackages = config.viewPackages.concat( _parentSwiz.config.viewPackages );
+			}
+			
+			// set domain if it has not been set
+			if( domain == null )
+			{
+				domain = ApplicationDomain.currentDomain;
+			}
+			
+			// set global dispatcher if a parent wasn't able to set it
+			if( globalDispatcher == null )
+			{
+				globalDispatcher = dispatcher;
 			}
 			
 			constructProviders();
@@ -306,8 +322,10 @@ package org.swizframework.core
 		 */
 		public function tearDown():void
 		{
+			parentSwiz = null;
 			beanFactory.tearDownBeans();
-			TypeCache.flushDomain( domain );
+			//TypeCache.flushDomain( domain );
+			SwizManager.removeSwiz( this );
 		}
 		
 		// ========================================
@@ -368,7 +386,7 @@ package org.swizframework.core
 			// and attach a listener for children
 			dispatcher.addEventListener( SwizEvent.CREATED, handleSwizCreatedEvent );
 			
-			logger.info( "Dispatched Swiz Created Event to find parents" );
+			logger.info( "Dispatched Swiz Created Event to find parent" );
 		}
 		
 		/**
@@ -376,9 +394,9 @@ package org.swizframework.core
 		 * as the parent. Relies on display list ordering as a means of conveying parent / child
 		 * relationships. Pure AS projects will need to call setParent explicitly.
 		 */
-		protected function handleSwizCreatedEvent(event:SwizEvent):void
+		protected function handleSwizCreatedEvent( event:SwizEvent ):void
 		{
-			if( event.swiz != null )
+			if( event.swiz != null  && event.swiz.parentSwiz == null )
 			{
 				event.swiz.parentSwiz = this;
 			}
