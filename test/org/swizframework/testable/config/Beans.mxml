@@ -5,8 +5,6 @@
 		 xmlns:swiz="http://swiz.swizframework.org"
 		 xmlns:control="org.swizframework.testable.control.*">
 	
-	<fx:Declarations>
-		<control:SimpleController id="simpleController" />
-	</fx:Declarations>
+	<control:SimpleController id="simpleController" />
 	
 </swiz:BeanProvider>

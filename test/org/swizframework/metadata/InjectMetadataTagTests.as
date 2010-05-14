@@ -22,7 +22,7 @@ package org.swizframework.metadata
 		public function testInjectTagDefaults():void
 		{
 			var injectMetadataTag:InjectMetadataTag = new InjectMetadataTag();
-			assertTrue( "Inject metadata tag's bind property is not true.", injectMetadataTag.bind );
+			assertTrue( "Inject metadata tag's bind property is not false.", !injectMetadataTag.bind );
 			assertTrue( "Inject metadata tag's required property is not true.", injectMetadataTag.required );
 			assertTrue( "Inject metadata tag's twoWay property is not true.", !injectMetadataTag.twoWay );
 			assertTrue( "Inject metadata tag's source property is not null.", injectMetadataTag.source == null );
@@ -47,7 +47,7 @@ package org.swizframework.metadata
 			var injectMetadataTag:InjectMetadataTag = new InjectMetadataTag();
 			injectMetadataTag.copyFrom( originalMetadataTag );
 			
-			assertTrue( "Inject metadata tag's bind property is not true.", injectMetadataTag.bind );
+			assertTrue( "Inject metadata tag's bind property is not false.", !injectMetadataTag.bind );
 			assertTrue( "Inject metadata tag's required property is not true.", injectMetadataTag.required );
 			assertTrue( "Inject metadata tag's twoWay property is not true.", !injectMetadataTag.twoWay );
 			assertTrue( "Inject metadata tag's source property is not null.", injectMetadataTag.source == null );

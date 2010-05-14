@@ -21,6 +21,7 @@ package org.swizframework.core.mxml
 	{
 		protected static var LONG_TIME:int = 500;
 		private var rootContainer : RootContainer;
+		private var testBean : Bean;
 		
 		[Before(async,ui)]
 		public function createRootContainer() : void
@@ -35,6 +36,7 @@ package org.swizframework.core.mxml
 		public function destroyRootContainer() : void
 		{
 			UIImpersonator.removeAllChildren();
+			rootContainer.mySwiz.beanFactory.tearDownBean( testBean );
 			rootContainer = null;
 		}
 		
@@ -107,12 +109,12 @@ package org.swizframework.core.mxml
 			var swiz : org.swizframework.core.mxml.Swiz = rootContainer.mySwiz;
 			
 			// wrap the unit test in a Bean definition
-			var bean:Bean = new Bean();
-			bean.source = this;
-			bean.typeDescriptor = TypeCache.getTypeDescriptor( bean.type, swiz.domain );
+			testBean = new Bean();
+			testBean.source = this;
+			testBean.typeDescriptor = TypeCache.getTypeDescriptor( testBean.type, swiz.domain );
 			
 			// autowire test case with bean factory
-			swiz.beanFactory.setUpBean( bean );
+			swiz.beanFactory.setUpBean( testBean );
 		}
 		
 	}
