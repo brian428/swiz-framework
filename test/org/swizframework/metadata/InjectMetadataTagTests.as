@@ -1,18 +1,12 @@
 package org.swizframework.metadata
 {
-	import flash.system.ApplicationDomain;
-	
-	import mx.logging.ILogger;
-	import mx.logging.LogEvent;
-	import mx.logging.LogEventLevel;
-	
 	import org.flexunit.asserts.assertTrue;
 	import org.flexunit.async.Async;
-	import org.swizframework.core.Bean;
 	import org.swizframework.reflection.MetadataArg;
 	import org.swizframework.reflection.MetadataHostProperty;
-	import org.swizframework.reflection.TypeCache;
-	import org.swizframework.utils.SwizLogger;
+	import org.swizframework.utils.logging.SwizLogEvent;
+	import org.swizframework.utils.logging.SwizLogEventLevel;
+	import org.swizframework.utils.logging.SwizLogger;
 	
 	public class InjectMetadataTagTests
 	{
@@ -92,9 +86,9 @@ package org.swizframework.metadata
 			
 			var host : MetadataHostProperty = new MetadataHostProperty();
 			var injectMetadataTag:InjectMetadataTag = new InjectMetadataTag();
-			var logger:ILogger =  SwizLogger.getLogger( injectMetadataTag );
+			var logger:SwizLogger =  SwizLogger.getLogger( injectMetadataTag );
 			
-			Async.handleEvent( this, logger, LogEvent.LOG, checkLogging, LONG_TIME, {level:LogEventLevel.WARN, substring:"bean attribute"} ); 
+			Async.handleEvent( this, logger, SwizLogEvent.LOG_EVENT, checkLogging, LONG_TIME, {level:SwizLogEventLevel.WARN, substring:"bean attribute"} ); 
 			injectMetadataTag.copyFrom( originalMetadataTag );	
 		}
 		
@@ -107,13 +101,13 @@ package org.swizframework.metadata
 			
 			var host : MetadataHostProperty = new MetadataHostProperty();
 			var injectMetadataTag:InjectMetadataTag = new InjectMetadataTag();
-			var logger:ILogger =  SwizLogger.getLogger( injectMetadataTag );
+			var logger:SwizLogger =  SwizLogger.getLogger( injectMetadataTag );
 			
-			Async.handleEvent( this, logger, LogEvent.LOG, checkLogging, LONG_TIME, {level:LogEventLevel.WARN, substring:"property attribute"} ); 
+			Async.handleEvent( this, logger, SwizLogEvent.LOG_EVENT, checkLogging, LONG_TIME, {level:SwizLogEventLevel.WARN, substring:"property attribute"} ); 
 			injectMetadataTag.copyFrom( originalMetadataTag );	
 		}
 		
-		protected function checkLogging( event : LogEvent, passThroughData : Object ) : void
+		protected function checkLogging( event : SwizLogEvent, passThroughData : Object ) : void
 		{
 			assertTrue( "Test did not log expected logging level.", event.level == passThroughData.level );
 			assertTrue( "Test did not log expected logging message.", event.message.match(".*" + passThroughData.substring + ".*").length > 0 );

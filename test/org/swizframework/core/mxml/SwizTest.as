@@ -15,7 +15,6 @@ package org.swizframework.core.mxml
 	import org.swizframework.testable.control.SimpleController;
 	import org.swizframework.testable.event.SimpleTestEvent;
 	import org.swizframework.testable.view.SimpleCanvas;
-	import org.swizframework.utils.test.AutowiredTestCase;
 	
 	public class SwizTest
 	{
