@@ -4,6 +4,7 @@ package org.swizframework.core.mxml
 	import flash.events.IEventDispatcher;
 	
 	import mx.events.FlexEvent;
+	import mx.events.ModuleEvent;
 	
 	import org.flexunit.Assert;
 	import org.flexunit.async.Async;
@@ -14,11 +15,13 @@ package org.swizframework.core.mxml
 	import org.swizframework.testable.RootContainer;
 	import org.swizframework.testable.control.SimpleController;
 	import org.swizframework.testable.event.SimpleTestEvent;
+	import org.swizframework.testable.module.RootModuleContainer;
+	import org.swizframework.testable.module.control.SimpleModuleController;
 	import org.swizframework.testable.view.SimpleCanvas;
 	
 	public class SwizTest
 	{
-		protected static var LONG_TIME:int = 500;
+		protected static var LONG_TIME:int = 5000;
 		private var rootContainer : RootContainer;
 		private var testBean : Bean;
 		
@@ -83,6 +86,19 @@ package org.swizframework.core.mxml
 		{
 			var simpleCanvas : SimpleCanvas = rootContainer.simpleCanvas;
 			Assert.assertTrue( "Controller implementing ISwizAware does not have correct Swiz instance", simpleCanvas.controller._swiz is ISwiz );	
+		}
+		
+		[Test(async)]
+		public function testSwizBeanInModule() : void 
+		{
+			Async.handleEvent( this, rootContainer, "testModuleAdded", testModuleBean, LONG_TIME, null ); 
+			rootContainer.loadTestModule();
+		}
+		
+		protected function testModuleBean( event : Event, passThroughData : Object ) : void
+		{
+			var bean : Bean = RootModuleContainer( rootContainer.testModuleLoader.child ).mySwiz.beanFactory.getBeanByType( SimpleController );
+			Assert.assertTrue( "Bean loaded in module cannot load bean from parent application.", bean.source is SimpleController );
 		}
 		
 		protected function compareEventDataToPassThroughEventName( event : SimpleTestEvent, passThroughData : Object ) : void

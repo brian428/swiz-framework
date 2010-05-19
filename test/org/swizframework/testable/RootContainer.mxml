@@ -8,7 +8,29 @@
 	
 	<fx:Script>
 		<![CDATA[
+			import mx.events.ModuleEvent;
+			
 			import org.swizframework.testable.config.Beans;
+			
+			public static const MODULE_ADDED : String = "testModuleAdded";
+			public static const MODULE_BEAN_CREATED : String = "simpleModuleControllerCreated";
+			
+			public function loadTestModule() : void
+			{
+				testModuleLoader.addEventListener( ModuleEvent.READY, addModule, false, 0, true );
+				testModuleLoader.loadModule( "org/swizframework/testable/module/RootModuleContainer.swf" );
+			}
+			
+			private function addModule( event : Event ) : void
+			{
+				testModuleLoader.child.addEventListener( MODULE_BEAN_CREATED, moduleAdded, false, 0, true );
+			}
+			
+			private function moduleAdded( event : Event ) : void
+			{
+				dispatchEvent( new Event( MODULE_ADDED, true ) );
+			}
+			
 		]]>
 	</fx:Script>
 	
@@ -20,6 +42,11 @@
 		<swiz:Swiz id="mySwiz" beanProviders="{[Beans]}" config="{mySwizConfig}" />
 	</fx:Declarations>
 	
+	<s:layout>
+		<s:VerticalLayout />
+	</s:layout>
+	
 	<view:SimpleCanvas id="simpleCanvas" />
+	<mx:ModuleLoader id="testModuleLoader" />
 	
 </s:Group>
