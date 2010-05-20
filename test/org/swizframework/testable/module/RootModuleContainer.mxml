@@ -9,13 +9,22 @@
 	<fx:Script>
 		<![CDATA[
 			import org.swizframework.testable.module.config.Beans;
+			
+			public var mediatorRan : Boolean = false;
+			
+			[Mediate( event="SimpleModuleController.CONTROLLER_CREATED" )]
+			public function handleControllerEvent() : void 
+			{
+				mediatorRan = true;
+			}
+			
 		]]>
 	</fx:Script>
 	
 	<fx:Declarations>
 		<swiz:SwizConfig id="mySwizConfig"
-						 eventPackages="org.swizframework.testable.event.*"
-						 viewPackages="org.swizframework.testable.view.*" />
+						 eventPackages="org.swizframework.testable.event.*,org.swizframework.testable.module.control.*"
+						 viewPackages="org.swizframework.testable.module.view.*" />
 		
 		<swiz:Swiz id="mySwiz" beanProviders="{[Beans]}" config="{mySwizConfig}" />
 	</fx:Declarations>

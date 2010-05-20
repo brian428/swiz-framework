@@ -95,10 +95,23 @@ package org.swizframework.core.mxml
 			rootContainer.loadTestModule();
 		}
 		
+		[Test(async)]
+		public function testModuleMediatesControllerEventInModuleRoot() : void 
+		{
+			Async.handleEvent( this, rootContainer, "testModuleAdded", testModuleMediatedControllerEvent, LONG_TIME, null ); 
+			rootContainer.loadTestModule();
+		}
+		
 		protected function testModuleBean( event : Event, passThroughData : Object ) : void
 		{
 			var bean : Bean = RootModuleContainer( rootContainer.testModuleLoader.child ).mySwiz.beanFactory.getBeanByType( SimpleController );
 			Assert.assertTrue( "Bean loaded in module cannot load bean from parent application.", bean.source is SimpleController );
+		}
+		
+		protected function testModuleMediatedControllerEvent( event : Event, passThroughData : Object ) : void
+		{
+			var mediateWorked : Boolean = RootModuleContainer( rootContainer.testModuleLoader.child ).mediatorRan;
+			Assert.assertTrue( "Module root container did not mediate controller event.", mediateWorked );
 		}
 		
 		protected function compareEventDataToPassThroughEventName( event : SimpleTestEvent, passThroughData : Object ) : void

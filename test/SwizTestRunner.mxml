@@ -7,12 +7,14 @@
 	creationComplete="runTests();" 
 	xmlns:flexui="flexunit.flexui.*">
 	
+	<!--
+	Note that for the module tests to work, you must add the Flex module at 
+	org.swizframework.testable.module.RootModuleContainer 
+	as an application module.
+	-->
+	
 	<fx:Script>
 		<![CDATA[
-			import mx.logging.LogEventLevel;
-			
-			import org.flexunit.internals.TextListener;
-			import org.flexunit.internals.TraceListener;
 			import org.flexunit.listeners.CIListener;
 			import org.flexunit.listeners.UIListener;
 			import org.flexunit.runner.FlexUnitCore;
@@ -35,12 +37,6 @@
 				// Listener to support continuous integration servers
 				core.addListener( new CIListener() );
 				
-				// If you would like to see text output in verbose mode, 
-				// uncomment either of the follow listeners
-				//core.addListener( new TraceListener() ); // For AS3 Projects
-				//core.addListener( TextListener.getDefaultTextListener( LogEventLevel.DEBUG ) ); // For Flex Projects
-				
-				//core.run( ReflectionTestsSuite );
 				core.run( SwizTestSuite, ReflectionTestsSuite, StorageTestSuite, MetadataTestSuite );
 			}
 		]]>
