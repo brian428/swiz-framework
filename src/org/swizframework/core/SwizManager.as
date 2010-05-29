@@ -76,7 +76,6 @@ package org.swizframework.core
 			var rootSwiz:ISwiz = swizzes[ 0 ];
 			wiredViews.push( uid );
 			rootSwiz.beanFactory.setUpBean( BeanFactory.constructBean( dObj, null, swiz.domain ) );
-			
 		}
 		
 		public static function tearDown( dObj:DisplayObject ):void
@@ -91,6 +90,11 @@ package org.swizframework.core
 			{
 				var swiz:ISwiz = ISwiz( swizzes[ i ] );
 				
+				// if this is the dispatcher for a swiz instance tear down swiz 
+				if( swiz.dispatcher == dObj )
+					swiz.tearDown();
+				
+				// if the passed in object is a child of swiz's dispatcher, use that instance for tearDown
 				if( DisplayObjectContainer( swiz.dispatcher ).contains( dObj ) )
 				{
 					wiredViews.splice( wiredViews.indexOf( uid ), 1 );
@@ -98,8 +102,6 @@ package org.swizframework.core
 					return;
 				}
 			}
-			
-			
 			
 			// this is stupid, if we got here, no swiz had a dispatcher 
 			// containing the view (like, it's a freaking popup). make the first swiz do it
