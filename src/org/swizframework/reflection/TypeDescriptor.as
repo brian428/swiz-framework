@@ -20,6 +20,7 @@ package org.swizframework.reflection
 	import flash.utils.Dictionary;
 	import flash.utils.getDefinitionByName;
 	
+	import org.swizframework.core.SwizManager;
 	import org.swizframework.factories.MetadataHostFactory;
 	
 	/**
@@ -100,13 +101,17 @@ package org.swizframework.reflection
 			
 			metadataHosts = new Dictionary();
 			
-			// find all metadata tags in describeType()'s output XML
+			// Build a regex to match only Swiz metadata and user-defined custom metadata processor tags
+			var mdRegExp : RegExp = new RegExp( "(" + SwizManager.metadataTagNames.join('|') + ")" );
+			
+			// find all Swiz built-in and user defined metadata tags in describeType()'s output XML
 			// parent node will be the actual property/method/class node
 			for each( var mdNode:XML in description..metadata )
 			{
 				// flex 4 includes crazy metadata on every single property and method
 				// in debug mode. the name starts with _, so we ignore that
-				if( String( mdNode.@name ).indexOf( "_" ) == 0 )
+				// We also ignore any non-Swiz metadata or user-defined custom metadata processor tags
+				if( String( mdNode.@name ).indexOf( "_" ) == 0 || String( mdNode.@name ).search( mdRegExp ) < 0 )
 					continue;
 				
 				// gather and store all key/value pairs for the metadata tag
