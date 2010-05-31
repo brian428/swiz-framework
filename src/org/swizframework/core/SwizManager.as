@@ -28,22 +28,15 @@ package org.swizframework.core
 	{
 		public static var swizzes:Array = [];
 		public static var wiredViews:Array = [];
-		public static var metadataTagNames:Array = [];
+		public static var metadataNames:Array = [];
 		
 		public static function addSwiz( swiz:ISwiz ):void
 		{
 			swizzes.push( swiz );
 			
-			// Build a unique set of Swiz-specific and user-defined custom metadata tags.
-			// This way, other code, such as TypeDescriptor, can use it to only process Swiz metadata and ignore all the unnecessary Flex/Flash metadata.
 			for each( var p:IProcessor in swiz.processors )
-			{
 				if( p is IMetadataProcessor )
-				{
-					metadataTagNames = arrayConcatUnique( metadataTagNames, IMetadataProcessor( p ).metadataNames );
-				}	
-			}
-			
+					metadataNames = metadataNames.concat( IMetadataProcessor( p ).metadataNames )
 		}
 		
 		public static function removeSwiz( swiz:ISwiz ):void
@@ -109,27 +102,5 @@ package org.swizframework.core
 			wiredViews.splice( wiredViews.indexOf( uid ), 1 );
 			rootSwiz.beanFactory.tearDownBean( BeanFactory.constructBean( dObj, null, swiz.domain ) );
 		}
-		
-		/**
-		 * Returns an array of unique values contained in all of the passed arrays.
-		 */ 
-		private static function arrayConcatUnique( ...args ) : Array
-		{
-			var result : Array = new Array();
-			for each ( var arg:* in args )
-			{
-				if ( arg is Array )
-				{
-					for each ( var value:* in arg )
-					{
-						if ( result.indexOf( value ) == -1 )
-							result.push( value );
-					}
-				}
-			}
-			return result;
-		}
-	
 	}
-
 }
