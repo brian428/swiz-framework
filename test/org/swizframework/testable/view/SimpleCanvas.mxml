@@ -21,7 +21,13 @@
 			[Bindable]
 			public var controllerName : String;
 			
+			[Inject(source="simpleController.name", bind="true")]
+			[Bindable]
+			public var bindingControllerName : String;
 			
+			[Inject(source="simpleController.name", bind="true", twoWay="true")]
+			[Bindable]
+			public var twoWayBindingControllerName : String;
 			
 			public function dispatchSimpleEvent() : void
 			{

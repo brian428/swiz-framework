@@ -9,13 +9,26 @@
 	<fx:Script>
 		<![CDATA[
 			import org.swizframework.testable.module.config.Beans;
+			import org.swizframework.testable.module.control.SimpleModuleController;
 			
-			public var mediatorRan : Boolean = false;
+			public var moduleEventMediatorRan : Boolean = false;
+			public var parentAppEventMediatorRan : Boolean = false;
 			
-			[Mediate( event="SimpleModuleController.CONTROLLER_CREATED" )]
-			public function handleControllerEvent() : void 
+			[Mediate( event="SimpleModuleController.CONTROLLER_EVENT" )]
+			public function handleModuleControllerEvent() : void 
 			{
-				mediatorRan = true;
+				moduleEventMediatorRan = true;
+			}
+			
+			[Mediate( event="SimpleTestEvent.GENERIC_EVENT" )]
+			public function handleParentAppEvent() : void 
+			{
+				parentAppEventMediatorRan = true;
+			}
+			
+			public function triggerModuleControllerEvent() : void
+			{
+				dispatchEvent( new Event( SimpleModuleController.CONTROLLER_EVENT, true ) );
 			}
 			
 		]]>

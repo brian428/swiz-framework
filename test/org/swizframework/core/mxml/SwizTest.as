@@ -17,6 +17,7 @@ package org.swizframework.core.mxml
 	import org.swizframework.testable.event.SimpleTestEvent;
 	import org.swizframework.testable.module.RootModuleContainer;
 	import org.swizframework.testable.module.control.SimpleModuleController;
+	import org.swizframework.testable.module.view.SimpleModuleCanvas;
 	import org.swizframework.testable.view.SimpleCanvas;
 	
 	public class SwizTest
@@ -45,7 +46,7 @@ package org.swizframework.core.mxml
 		[Test(async)]
 		public function testSwizDispatcherSet() : void 
 		{
-			Assert.assertTrue( "Swiz does not have correct dispatcher instance", rootContainer.mySwiz.dispatcher == rootContainer );	
+			Assert.assertTrue( "Swiz does not have correct dispatcher instance.", rootContainer.mySwiz.dispatcher == rootContainer );	
 		}
 		
 		[Test(async)]
@@ -70,8 +71,35 @@ package org.swizframework.core.mxml
 			Assert.assertTrue( "View component did not have controller injected by type", simpleCanvas.controller is SimpleController );
 			Assert.assertTrue( "View component did not have controller injected by name", simpleCanvas.namedController is SimpleController );
 			Assert.assertTrue( "Controller name property was not correctly set during [PostConstruct]", simpleCanvas.controller.name == SimpleController.CONTROLLER_NAME );
-			Assert.assertTrue( "View component did not have outjected controller property injected", simpleCanvas.controllerName == SimpleController.CONTROLLER_NAME );
-			Assert.assertTrue( "View component did not have controller property injected into Canvas label property", simpleCanvas.label == SimpleController.CONTROLLER_NAME );	
+			Assert.assertTrue( "View component did not have controller property injected", simpleCanvas.controllerName == SimpleController.CONTROLLER_NAME );
+			Assert.assertTrue( "View component did not have controller property injected into destination Canvas label property", simpleCanvas.label == SimpleController.CONTROLLER_NAME );	
+		}
+		
+		[Test(async,ui)]
+		public function testSwizBindingInjectIntoView() : void
+		{
+			var newName : String = "Some new controller name!";
+			var simpleCanvas : SimpleCanvas = rootContainer.simpleCanvas;
+			simpleCanvas.controller.name = newName;
+			Assert.assertTrue( "Injected property without binding was updated when it should not have been.", simpleCanvas.controllerName != newName );
+			Assert.assertTrue( "Injected property with binding was not updated when it should have been.", simpleCanvas.bindingControllerName == newName );
+			Assert.assertTrue( "Injected property with two-way binding was not updated when it should have been.", simpleCanvas.twoWayBindingControllerName == newName );
+		}
+		
+		[Test(async,ui)]
+		public function testSwizTwoWayBindingInjectIntoView() : void
+		{
+			var newName : String = "Some new controller name!";
+			var simpleCanvas : SimpleCanvas = rootContainer.simpleCanvas;
+			
+			simpleCanvas.controllerName = newName;
+			Assert.assertTrue( "Changing injected property with no binding updated the controller property.", simpleCanvas.controller.name != newName );
+			
+			simpleCanvas.bindingControllerName = newName;
+			Assert.assertTrue( "Changing injected property with one-way binding updated the controller property.", simpleCanvas.controller.name != newName );
+			
+			simpleCanvas.twoWayBindingControllerName = newName;
+			Assert.assertTrue( "Changing injected property with two-way binding did not update the controller property.", simpleCanvas.controller.name == newName );
 		}
 		
 		[Test(async)]
@@ -91,27 +119,44 @@ package org.swizframework.core.mxml
 		[Test(async)]
 		public function testSwizBeanInModule() : void 
 		{
-			Async.handleEvent( this, rootContainer, "testModuleAdded", testModuleBean, LONG_TIME, null ); 
+			Async.handleEvent( this, rootContainer, RootContainer.MODULE_ADDED, testModuleBean, LONG_TIME, null ); 
 			rootContainer.loadTestModule();
 		}
 		
 		[Test(async)]
 		public function testModuleMediatesControllerEventInModuleRoot() : void 
 		{
-			Async.handleEvent( this, rootContainer, "testModuleAdded", testModuleMediatedControllerEvent, LONG_TIME, null ); 
+			Async.handleEvent( this, rootContainer, RootContainer.MODULE_ADDED, testModuleMediatedControllerEvent, LONG_TIME, null ); 
+			rootContainer.loadTestModule();
+		}
+		
+		[Test(async)]
+		public function testModuleMediatesParentApplicationEvent() : void 
+		{
+			Async.handleEvent( this, rootContainer, RootContainer.MODULE_ADDED, testModuleMediatedParentApplicationEvent, LONG_TIME, null ); 
 			rootContainer.loadTestModule();
 		}
 		
 		protected function testModuleBean( event : Event, passThroughData : Object ) : void
 		{
 			var bean : Bean = RootModuleContainer( rootContainer.testModuleLoader.child ).mySwiz.beanFactory.getBeanByType( SimpleController );
+			var moduleCanvas : SimpleModuleCanvas = RootModuleContainer( rootContainer.testModuleLoader.child ).simpleModuleCanvas;
+			
 			Assert.assertTrue( "Bean loaded in module cannot load bean from parent application.", bean.source is SimpleController );
+			Assert.assertTrue( "View component in module did not have parent application bean injected by type", moduleCanvas.controller is SimpleController );
+			Assert.assertTrue( "View component in module did not have parent application bean injected by name", moduleCanvas.namedController is SimpleController );
+		}
+		
+		protected function testModuleMediatedParentApplicationEvent( event : Event, passThroughData : Object ) : void
+		{
+			var mediateWorked : Boolean = RootModuleContainer( rootContainer.testModuleLoader.child ).parentAppEventMediatorRan;
+			Assert.assertTrue( "Module root container did not mediate parent application event.", mediateWorked );
 		}
 		
 		protected function testModuleMediatedControllerEvent( event : Event, passThroughData : Object ) : void
 		{
-			var mediateWorked : Boolean = RootModuleContainer( rootContainer.testModuleLoader.child ).mediatorRan;
-			Assert.assertTrue( "Module root container did not mediate controller event.", mediateWorked );
+			var mediateWorked : Boolean = RootModuleContainer( rootContainer.testModuleLoader.child ).moduleEventMediatorRan;
+			Assert.assertTrue( "Module root container did not mediate module controller event.", mediateWorked );
 		}
 		
 		protected function compareEventDataToPassThroughEventName( event : SimpleTestEvent, passThroughData : Object ) : void

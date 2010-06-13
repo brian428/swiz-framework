@@ -11,23 +11,39 @@
 			import mx.events.ModuleEvent;
 			
 			import org.swizframework.testable.config.Beans;
+			import org.swizframework.testable.event.SimpleTestEvent;
+			import org.swizframework.testable.module.RootModuleContainer;
+			import org.swizframework.testable.module.control.SimpleModuleController;
 			
 			public static const MODULE_ADDED : String = "testModuleAdded";
-			public static const MODULE_BEAN_CREATED : String = "simpleModuleControllerCreated";
+			public static const MODULE_BEAN_CREATED : String = SimpleModuleController.MODULE_SETUP_COMPLETE;
 			
+			/**
+			 * Trigger a load of a child module.
+			 */ 
 			public function loadTestModule() : void
 			{
 				testModuleLoader.addEventListener( ModuleEvent.READY, addModule, false, 0, true );
 				testModuleLoader.loadModule( "org/swizframework/testable/module/RootModuleContainer.swf" );
 			}
 			
+			/**
+			 * Listen for the module to dispatch an event when Swiz has created the module's beans.
+			 */ 
 			private function addModule( event : Event ) : void
 			{
 				testModuleLoader.child.addEventListener( MODULE_BEAN_CREATED, moduleAdded, false, 0, true );
 			}
 			
+			/**
+			 * Trigger the module to dispatch a module-specific event defined in the module's controller.
+			 * Then dispatch a parent application event so we can test that the module can mediate it.
+			 * Finally, dispatch a MODULE_ADDED event so our other tests know it is OK to check that the module-related behavior ran successfully.
+			 */ 
 			private function moduleAdded( event : Event ) : void
 			{
+				RootModuleContainer( testModuleLoader.child ).triggerModuleControllerEvent();
+				dispatchEvent( new SimpleTestEvent( SimpleTestEvent.GENERIC_EVENT ) );
 				dispatchEvent( new Event( MODULE_ADDED, true ) );
 			}
 			
