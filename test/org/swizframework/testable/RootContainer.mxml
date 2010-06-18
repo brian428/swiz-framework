@@ -51,11 +51,19 @@
 	</fx:Script>
 	
 	<fx:Declarations>
-		<swiz:SwizConfig id="mySwizConfig"
-						 eventPackages="org.swizframework.testable.event.*"
-						 viewPackages="org.swizframework.testable.view.*" />
-		
-		<swiz:Swiz id="mySwiz" beanProviders="{[Beans]}" config="{mySwizConfig}" />
+		<swiz:Swiz id="mySwiz">
+			<swiz:config>
+				<swiz:SwizConfig id="mySwizConfig"
+								 eventPackages="org.swizframework.testable.event.*"
+								 viewPackages="org.swizframework.testable.view.*" />
+			</swiz:config>
+			<swiz:beanProviders>
+				<config:Beans/>
+			</swiz:beanProviders>
+			<swiz:loggingTargets>
+				<swiz:SwizTraceTarget id="myTraceTarget" />
+			</swiz:loggingTargets>	
+		</swiz:Swiz>	
 	</fx:Declarations>
 	
 	<s:layout>
