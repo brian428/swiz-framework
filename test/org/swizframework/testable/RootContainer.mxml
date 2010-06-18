@@ -4,6 +4,7 @@
 		 xmlns:mx="library://ns.adobe.com/flex/mx"
 		 xmlns:swiz="http://swiz.swizframework.org"
 		 xmlns:view="org.swizframework.testable.view.*"
+		 xmlns:config="org.swizframework.testable.config.*"
 		 width="400" height="300">
 	
 	<fx:Script>
