@@ -197,7 +197,8 @@ package org.swizframework.core
 		 */ 
 		protected function destroySwiz() : void
 		{
-			ui.removeAllChildren();			
+			ui.removeAllChildren();		
+			swiz.beanFactory.tearDownBeans();
 			swiz = null;
 		}
 		

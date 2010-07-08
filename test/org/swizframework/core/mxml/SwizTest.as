@@ -22,6 +22,9 @@ package org.swizframework.core.mxml
 	
 	public class SwizTest
 	{
+		[Dispatcher]
+		public var dispatcher : IEventDispatcher;
+		
 		protected static var LONG_TIME:int = 5000;
 		private var rootContainer : RootContainer;
 		private var testBean : Bean;
@@ -39,20 +42,20 @@ package org.swizframework.core.mxml
 		public function destroyRootContainer() : void
 		{
 			UIImpersonator.removeAllChildren();
-			rootContainer.mySwiz.beanFactory.tearDownBean( testBean );
+			rootContainer.mySwiz.beanFactory.tearDownBeans();
 			rootContainer = null;
 		}
 		
 		[Test(async)]
 		public function testSwizDispatcherSet() : void 
 		{
-			Assert.assertTrue( "Swiz does not have correct dispatcher instance.", rootContainer.mySwiz.dispatcher == rootContainer );	
+			Assert.assertTrue( "Swiz does not have correct dispatcher instance.", dispatcher == rootContainer );	
 		}
 		
 		[Test(async)]
 		public function testSwizMediatesViewEvent() : void 
 		{
-			Async.handleEvent( this, rootContainer, SimpleTestEvent.GENERIC_RESULT_EVENT, compareEventDataToPassThroughEventName, LONG_TIME, {eventName:SimpleTestEvent.GENERIC_EVENT} ); 
+			Async.handleEvent( this, dispatcher, SimpleTestEvent.GENERIC_RESULT_EVENT, compareEventDataToPassThroughEventName, LONG_TIME, {eventName:SimpleTestEvent.GENERIC_EVENT} ); 
 			rootContainer.dispatchEvent( createSimpleTestEvent( SimpleTestEvent.GENERIC_EVENT, SimpleTestEvent.GENERIC_EVENT ) );
 		}
 		
@@ -60,7 +63,7 @@ package org.swizframework.core.mxml
 		public function testSwizMediatesChildViewEvent() : void
 		{
 			var simpleCanvas : SimpleCanvas = rootContainer.simpleCanvas;
-			Async.handleEvent( this, rootContainer, SimpleTestEvent.GENERIC_RESULT_EVENT, compareEventDataToPassThroughEventName, LONG_TIME, {eventName:SimpleTestEvent.GENERIC_EVENT} ); 	
+			Async.handleEvent( this, dispatcher, SimpleTestEvent.GENERIC_RESULT_EVENT, compareEventDataToPassThroughEventName, LONG_TIME, {eventName:SimpleTestEvent.GENERIC_EVENT} ); 	
 			simpleCanvas.dispatchSimpleEvent();
 		}
 		
@@ -167,7 +170,7 @@ package org.swizframework.core.mxml
 		[Mediate( event="SimpleTestEvent.GENERIC_EVENT", properties="data" )]
 		public function genericMediatorWithData( data : Object ) : void 
 		{
-			rootContainer.dispatchEvent( createSimpleTestEvent( SimpleTestEvent.GENERIC_RESULT_EVENT, data ) );
+			dispatcher.dispatchEvent( createSimpleTestEvent( SimpleTestEvent.GENERIC_RESULT_EVENT, data ) );
 		}
 		
 		protected function createSimpleTestEvent( eventName : String, data : Object = null ) : SimpleTestEvent
