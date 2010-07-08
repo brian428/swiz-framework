@@ -19,7 +19,7 @@ package org.swizframework.utils.chain
 	import flash.events.Event;
 	import flash.events.IEventDispatcher;
 	
-	public class EventChain extends AbstractChain implements IChain, IAutonomousChainStep
+	public class EventChain extends BaseCompositeChain
 	{
 		/**
 		 * Backing variable for <code>dispatcher</code> getter/setter.
@@ -46,14 +46,21 @@ package org.swizframework.utils.chain
 			this.dispatcher = dispatcher;
 		}
 		
-		public function doProceed():void
+		public function addEvent( event:EventChainStep ):EventChain
 		{
-			if( steps[ position ] is AbstractChain )
-				AbstractChain( steps[ position ] ).start();
-			else if( steps[ position ] is IAutonomousChainStep )
-				IAutonomousChainStep( steps[ position ] ).doProceed();
+			addStep( event );
+			return this;
+		}
+		
+		/**
+		 *
+		 */
+		override public function doProceed():void
+		{
+			if( currentStep is EventChainStep )
+				dispatcher.dispatchEvent( Event( currentStep ) );
 			else
-				dispatcher.dispatchEvent( Event( steps[ position ] ) );
+				super.doProceed();
 		}
 	}
 }
