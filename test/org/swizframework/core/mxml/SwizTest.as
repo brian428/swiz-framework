@@ -49,7 +49,7 @@ package org.swizframework.core.mxml
 		[Test(async)]
 		public function testSwizDispatcherSet() : void 
 		{
-			Assert.assertTrue( "Swiz does not have correct dispatcher instance.", dispatcher == rootContainer );	
+			Assert.assertTrue( "Swiz does not have correct dispatcher instance.", dispatcher is IEventDispatcher );	
 		}
 		
 		[Test(async)]
