@@ -14,27 +14,12 @@
  * the License.
  */
 
-package org.swizframework.utils.chain
+package org.swizframework.utils.services
 {
-	public class FunctionChainStep extends BaseChainStep implements IAutonomousChainStep
+	import mx.rpc.AsyncToken;
+
+	public interface IServiceHelper
 	{
-		public var functionRef:Function;
-		public var functionArgArray:Array;
-		public var functionThisArg:*;
-		public var returnValue:*;
-		
-		public function FunctionChainStep( functionRef:Function, functionArgArray:Array = null, functionThisArg:* = null )
-		{
-			this.functionRef = functionRef;
-			this.functionArgArray = functionArgArray;
-			this.functionThisArg = functionThisArg;
-		}
-		
-		public function doProceed():void
-		{
-			returnValue = functionRef.apply( functionThisArg, functionArgArray );
-			
-			complete();
-		}
+		function executeServiceCall( call:AsyncToken, resultHandler:Function, faultHandler:Function = null, handlerArgs:Array = null ):AsyncToken;
 	}
 }

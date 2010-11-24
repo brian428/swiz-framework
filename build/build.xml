@@ -14,7 +14,7 @@
 	<property file="${basedir}/build/build.properties" />
 	
 	<!-- Setup Flex Ant Resources -->
-	<!-- <property name="FLEX_HOME" location="${flex.sdk}" /> -->
+	<!--property name="FLEX_HOME" location="${flex.sdk}" /-->
 	<property name="FLEX_HOME" location="${env.FLEX_HOME}" />
 	<taskdef resource="flexTasks.tasks" classpath="${FLEX_HOME}/ant/lib/flexTasks.jar" />
 	
@@ -90,6 +90,7 @@
 
 			<keep-as3-metadata name="Autowire"/>
 			<keep-as3-metadata name="Dispatcher"/>
+			<keep-as3-metadata name="EventHandler"/>
 			<keep-as3-metadata name="Inject"/>
 			<keep-as3-metadata name="Mediate"/>
 			<keep-as3-metadata name="PostConstruct"/>

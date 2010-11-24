@@ -47,17 +47,20 @@ package org.swizframework.factories
 		 * @see org.swizframework.reflection.MetadataHostMethod
 		 * @see org.swizframework.reflection.MetadataHostProperty
 		 */
-		public function getMetadataHost( hostNode:XML, domain:ApplicationDomain ):IMetadataHost
+		public static function getMetadataHost( hostNode:XML, domain:ApplicationDomain ):IMetadataHost
 		{
 			var host:IMetadataHost;
 			
 			// property, method or class?
 			var hostKind:String = hostNode.name();
 			
-			if( hostKind == "type" )
+			if( hostKind == "type" || hostKind == "factory" )
 			{
 				host = new MetadataHostClass();
-				host.type = domain.getDefinition( hostNode.@name.toString() ) as Class;
+				if( hostKind == "type" )
+					host.type = domain.getDefinition( hostNode.@name.toString() ) as Class;
+				else
+					host.type = domain.getDefinition( hostNode.@type.toString() ) as Class;
 			}
 			else if( hostKind == "method" )
 			{
