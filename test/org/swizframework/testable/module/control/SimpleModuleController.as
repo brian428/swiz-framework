@@ -6,8 +6,6 @@ package org.swizframework.testable.module.control
 	
 	public class SimpleModuleController extends AbstractController
 	{
-		public static const MODULE_SETUP_COMPLETE : String = "simpleModuleSetUpComplete";
-		public static const CONTROLLER_EVENT : String = "simpleModuleControllerEvent";
 		
 		[Bindable]
 		public var name : String;

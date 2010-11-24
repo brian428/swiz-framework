@@ -9,15 +9,15 @@
 	
 	<fx:Script>
 		<![CDATA[
+			import mx.events.FlexEvent;
 			import mx.events.ModuleEvent;
 			
 			import org.swizframework.testable.config.Beans;
 			import org.swizframework.testable.event.SimpleTestEvent;
 			import org.swizframework.testable.module.RootModuleContainer;
-			import org.swizframework.testable.module.control.SimpleModuleController;
+			import org.swizframework.testable.module.event.SimpleModuleEvent;
 			
 			public static const MODULE_ADDED : String = "testModuleAdded";
-			public static const MODULE_BEAN_CREATED : String = SimpleModuleController.MODULE_SETUP_COMPLETE;
 			
 			/**
 			 * Trigger a load of a child module.
@@ -29,11 +29,27 @@
 			}
 			
 			/**
+			 * Unload and remove the child module.
+			 */ 
+			public function removeTestModule() : void
+			{
+				testModuleLoader.unloadModule();
+			}
+			
+			/**
 			 * Listen for the module to dispatch an event when Swiz has created the module's beans.
 			 */ 
 			private function addModule( event : Event ) : void
 			{
-				testModuleLoader.child.addEventListener( MODULE_BEAN_CREATED, moduleAdded, false, 0, true );
+				testModuleLoader.child.addEventListener( FlexEvent.CREATION_COMPLETE, moduleCreationComplete, false, 0, true );
+			}
+			
+			/**
+			 * Listen for the module to dispatch creation complete, and sets up a listener for update complete to ensure Swiz wiring is done.
+			 */ 
+			private function moduleCreationComplete( event : Event ) : void
+			{
+				testModuleLoader.child.addEventListener( FlexEvent.UPDATE_COMPLETE, moduleAdded, false, 0, true );
 			}
 			
 			/**
@@ -43,7 +59,7 @@
 			 */ 
 			private function moduleAdded( event : Event ) : void
 			{
-				RootModuleContainer( testModuleLoader.child ).triggerModuleControllerEvent();
+				RootModuleContainer( testModuleLoader.child ).triggerModuleEvent();
 				dispatchEvent( new SimpleTestEvent( SimpleTestEvent.GENERIC_EVENT ) );
 				dispatchEvent( new Event( MODULE_ADDED, true ) );
 			}

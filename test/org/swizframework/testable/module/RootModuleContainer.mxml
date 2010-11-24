@@ -8,16 +8,22 @@
 	
 	<fx:Script>
 		<![CDATA[
+			import mx.events.ModuleEvent;
+			
 			import org.swizframework.testable.module.config.Beans;
-			import org.swizframework.testable.module.control.SimpleModuleController;
+			import org.swizframework.testable.module.event.SimpleModuleEvent;
 			
 			public var moduleEventMediatorRan : Boolean = false;
 			public var parentAppEventMediatorRan : Boolean = false;
 			
-			[Mediate( event="SimpleModuleController.CONTROLLER_EVENT" )]
-			public function handleModuleControllerEvent() : void 
+			[Dispatcher]
+			public var swizDispatcher : IEventDispatcher;
+			
+			[Mediate( event="SimpleModuleEvent.MODULE_EVENT" )]
+			public function handleSimpleModuleEvent() : void 
 			{
 				moduleEventMediatorRan = true;
+				dispatchEvent( new Event( SimpleModuleEvent.MODULE_EVENT_COMPLETE, true ) );
 			}
 			
 			[Mediate( event="SimpleTestEvent.GENERIC_EVENT" )]
@@ -26,9 +32,9 @@
 				parentAppEventMediatorRan = true;
 			}
 			
-			public function triggerModuleControllerEvent() : void
+			public function triggerModuleEvent() : void
 			{
-				dispatchEvent( new Event( SimpleModuleController.CONTROLLER_EVENT, true ) );
+				dispatchEvent( new Event( SimpleModuleEvent.MODULE_EVENT ) );
 			}
 			
 		]]>
@@ -36,7 +42,7 @@
 	
 	<fx:Declarations>
 		<swiz:SwizConfig id="mySwizConfig"
-						 eventPackages="org.swizframework.testable.event.*,org.swizframework.testable.module.control.*"
+						 eventPackages="org.swizframework.testable.event.*,org.swizframework.testable.module.event.*"
 						 viewPackages="org.swizframework.testable.module.view.*" />
 		
 		<swiz:Swiz id="mySwiz" beanProviders="{[Beans]}" config="{mySwizConfig}" />

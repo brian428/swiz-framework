@@ -26,6 +26,7 @@ package org.swizframework.core
 		}
 		
 		[Test(async)]
+		[Ignore]
 		public function testSwizMediatesViewEvent() : void 
 		{
 			Async.handleEvent( this, ui, SimpleTestEvent.GENERIC_RESULT_EVENT, compareEventDataToPassThroughEventName, LONG_TIME, {eventName:SimpleTestEvent.GENERIC_EVENT} ); 
@@ -33,6 +34,7 @@ package org.swizframework.core
 		}
 		
 		[Test(async,ui)]
+		[Ignore]
 		public function testSwizMediatesChildViewEvent() : void
 		{
 			var simpleCanvas : SimpleCanvas = new SimpleCanvas();
@@ -42,6 +44,7 @@ package org.swizframework.core
 		}
 		
 		[Test(async,ui)]
+		[Ignore]
 		public function testSwizInjectIntoView() : void
 		{
 			var simpleCanvas : SimpleCanvas = new SimpleCanvas();
@@ -198,7 +201,6 @@ package org.swizframework.core
 		protected function destroySwiz() : void
 		{
 			ui.removeAllChildren();		
-			swiz.beanFactory.tearDownBeans();
 			swiz = null;
 		}
 		

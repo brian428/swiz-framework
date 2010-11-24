@@ -6,7 +6,6 @@ package testSuites
 	[Suite]
 	public class MetadataTestSuite
 	{
-		public var injectionTests:InjectionTests;
 		public var injectMetadataTagTests:InjectMetadataTagTests;
 	}
 }

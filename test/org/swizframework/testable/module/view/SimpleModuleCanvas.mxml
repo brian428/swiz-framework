@@ -6,7 +6,7 @@
 	<fx:Script>
 		<![CDATA[
 			import org.swizframework.testable.control.SimpleController;
-			import org.swizframework.testable.module.control.SimpleModuleController;
+			import org.swizframework.testable.module.event.SimpleModuleEvent;
 			
 			[Inject]
 			public var controller : SimpleController;
@@ -14,10 +14,11 @@
 			[Inject("simpleController")]
 			public var namedController : Object;
 			
-			[PostConstruct]
-			public function postConstructHandler() : void
+			[Mediate( event="SimpleModuleEvent.MODULE_EVENT" )]
+			public function handleModuleEvent() : void 
 			{
-				dispatchEvent( new Event( SimpleModuleController.MODULE_SETUP_COMPLETE, true ) );
+				//moduleEventMediatorRan = true;
+				dispatchEvent( new Event( SimpleModuleEvent.MODULE_EVENT_COMPLETE, true ) );
 			}
 			
 		]]>

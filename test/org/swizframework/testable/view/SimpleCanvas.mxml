@@ -3,7 +3,7 @@
 	
 	<fx:Metadata>
 		[Event("genericEvent")]
-		[Inject(source="simpleController.name", destination="label")]
+		[Inject(source="simpleController.name", destination="label", bind="true")]
 	</fx:Metadata>
 	
 	<fx:Script>
