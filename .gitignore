@@ -18,3 +18,8 @@ Icon
 Thumbs.db
 .DS_Store
 
+
+/.FlexUnitSettings/FlexUnitApplicationLastRun.xml
+/.FlexUnitSettings/FlexUnitApplicationLastSelection.xml
+/src/FlexUnitApplication-app.xml
+/src/FlexUnitApplication.mxml
