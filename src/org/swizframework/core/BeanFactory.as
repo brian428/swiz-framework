@@ -24,13 +24,14 @@ package org.swizframework.core
 	import flash.system.ApplicationDomain;
 	import flash.utils.getQualifiedClassName;
 	
-	import mx.modules.Module;
-	
 	import org.swizframework.events.BeanEvent;
+	import org.swizframework.events.SwizEvent;
 	import org.swizframework.processors.IBeanProcessor;
+	import org.swizframework.processors.IFactoryProcessor;
 	import org.swizframework.processors.IMetadataProcessor;
 	import org.swizframework.processors.IProcessor;
 	import org.swizframework.reflection.TypeCache;
+	import org.swizframework.utils.ModuleTypeUtil;
 	import org.swizframework.utils.logging.SwizLogger;
 	
 	/**
@@ -58,6 +59,8 @@ package org.swizframework.core
 		protected var removedDisplayObjects:Array = [];
 		
 		protected var isListeningForEnterFrame:Boolean = false;
+		
+		public var waitForSetup:Boolean = false;
 		
 		// ========================================
 		// public properties
@@ -102,6 +105,19 @@ package org.swizframework.core
 				addBeanProvider( beanProvider, false );
 			}
 			
+			// run any factory processors before setting up any beans
+			runFactoryProcessors();
+			
+			// todo: everything else shoud be delayed if the factoryProcessor initialized an aop autoproxy processor
+			completeBeanFactorySetup();
+		}
+		
+		public function completeBeanFactorySetup():void
+		{
+			if( waitForSetup ) return;
+			
+			logger.info( "BeanFactory completing setup" );
+			
 			// bean setup has to be delayed until after all startup beans have been added
 			for each( var bean:Bean in beans )
 			{
@@ -139,6 +155,8 @@ package org.swizframework.core
 				else
 					setUpBean( createBeanFromSource( swiz.dispatcher ) );
 			}
+			
+			swiz.dispatcher.dispatchEvent( new SwizEvent( SwizEvent.LOAD_COMPLETE, swiz ) );
 		}
 		
 		public function tearDown():void
@@ -165,7 +183,7 @@ package org.swizframework.core
 			logger.info( "BeanFactory torn down" );
 		}
 		
-		public function createBeanFromSource( source:Object, beanName:String = null ):Bean
+		protected function createBeanFromSource( source:Object, beanName:String = null ):Bean
 		{
 			var bean:Bean = getBeanForSource( source );
 			
@@ -175,11 +193,11 @@ package org.swizframework.core
 			return bean;
 		}
 		
-		public function getBeanForSource( source:Object ):Bean
+		protected function getBeanForSource( source:Object ):Bean
 		{
 			for each( var bean:Bean in beans )
 			{
-				if( bean is Prototype && Prototype( bean ).singleton == false )
+				if( bean is Prototype && ( Prototype( bean ).singleton == false || Prototype( bean ).initialized == false ) )
 					continue;
 				else if( bean.source === source )
 					return bean;
@@ -213,7 +231,7 @@ package org.swizframework.core
 			bean.beanFactory = this;
 			beans.push( bean );
 			
-			if( autoSetUpBean )
+			if( autoSetUpBean && !( bean is Prototype ) )
 				setUpBean( bean );
 			
 			return bean;
@@ -229,16 +247,13 @@ package org.swizframework.core
 		
 		public function removeBean( bean:Bean ):void
 		{
-			if( beans.indexOf( bean ) < 0 )
-			{
-				logger.warn( "{0} not found in beans list. Cannot remove." );
-			}
+			if( beans.indexOf( bean ) > -1 )
+				beans.splice( beans.indexOf( bean ), 1 );
 				
 			tearDownBean( bean );
 			bean.beanFactory = null;
 			bean.typeDescriptor = null;
 			bean.source = null;
-			beans.splice( beans.indexOf( bean ), 1 );
 			bean = null;
 		}
 		
@@ -301,6 +316,21 @@ package org.swizframework.core
 		}
 		
 		/**
+		 * Executes any Factory Processors
+		 */
+		public function runFactoryProcessors():void
+		{
+			for each( var processor:IProcessor in swiz.processors )
+			{
+				// Handle Metadata Processors
+				if( processor is IFactoryProcessor )
+				{
+					IFactoryProcessor( processor ).setUpFactory( this );
+				}
+			}
+		}
+		
+		/**
 		 * Initialze Bean
 		 */
 		public function setUpBean( bean:Bean ):void
@@ -315,6 +345,10 @@ package org.swizframework.core
 			
 			for each( processor in swiz.processors )
 			{
+				// skip factory processors
+				if( processor is IFactoryProcessor )
+					continue;
+				
 				// Handle Metadata Processors
 				if( processor is IMetadataProcessor )
 				{
@@ -330,6 +364,7 @@ package org.swizframework.core
 					metadataProcessor.setUpMetadataTags( metadataTags, bean );
 				}
 				
+				// Handle Bean Processors
 				if( processor is IBeanProcessor )
 				{
 					IBeanProcessor( processor ).setUpBean( bean );
@@ -344,6 +379,10 @@ package org.swizframework.core
 		{
 			for each( var processor:IProcessor in swiz.processors )
 			{
+				// skip factory processors
+				if( processor is IFactoryProcessor )
+					continue;
+				
 				// Handle Metadata Processors
 				if( processor is IMetadataProcessor )
 				{
@@ -404,7 +443,7 @@ package org.swizframework.core
 					if( existingBean )
 						tearDownBean( existingBean );
 					else
-						tearDownBean( constructBean( event.source, null, swiz.domain ) );
+						tearDownBean( constructBean( event.source, null, swiz.domain ) ); // non-singleton Prototype beans are not stored, so this is how we tear them down
 					break;
 				
 				case BeanEvent.REMOVE_BEAN:
@@ -454,7 +493,7 @@ package org.swizframework.core
 				return;
 			
 			if( isPotentialInjectionTarget( event.target ) )
-			{				
+			{
 				var i:int = removedDisplayObjects.indexOf( event.target );
 				
 				if( i != -1 )
@@ -495,10 +534,14 @@ package org.swizframework.core
 			if( event.target is ITearDownValidator && !( ITearDownValidator( event.target ).allowTearDown() ) )
 				return;
 			
-			if( SwizManager.wiredViews[event.target] || isPotentialInjectionTarget( event.target ) || event.target is Module )
-			{
+			if( !isPotentialInjectionTarget( event.target ) )
+				return;
+			
+			if( SwizManager.wiredViews[ event.target ] )
 				addRemovedDisplayObject( DisplayObject( event.target ) );
-			}
+			
+			if( event.target is ModuleTypeUtil.MODULE_TYPE )
+				addRemovedDisplayObject( DisplayObject( event.target ) );
 		}
 		
 		protected function addRemovedDisplayObject( displayObject:DisplayObject ):void
@@ -506,7 +549,7 @@ package org.swizframework.core
 			if( removedDisplayObjects.indexOf( displayObject ) == -1 )
 				removedDisplayObjects.push( displayObject );
 			
-			if( ! isListeningForEnterFrame )
+			if( !isListeningForEnterFrame )
 			{
 				swiz.dispatcher.addEventListener( Event.ENTER_FRAME, enterFrameHandler, false, 0, true );
 				isListeningForEnterFrame = true;
@@ -520,7 +563,7 @@ package org.swizframework.core
 			
 			var displayObject:DisplayObject = DisplayObject( removedDisplayObjects.shift() );
 			
-			while ( displayObject )
+			while( displayObject )
 			{
 				SwizManager.tearDown( displayObject );
 				displayObject = DisplayObject( removedDisplayObjects.shift() );
