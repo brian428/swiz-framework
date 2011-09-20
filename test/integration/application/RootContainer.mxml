@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx"
+		 xmlns:swiz="http://swiz.swizframework.org"
+		 xmlns:view="integration.application.view.*"
+		 xmlns:config="integration.application.config.*"
+		 width="400" height="300" removedFromStage="group1_removedFromStageHandler(event)">
+	
+	<fx:Script>
+		<![CDATA[
+			import mx.events.FlexEvent;
+			import mx.events.ModuleEvent;
+			
+			import integration.application.config.Beans;
+			import integration.application.event.SimpleTestEvent;
+			import integration.application.module.RootModuleContainer;
+			import integration.application.module.event.SimpleModuleEvent;
+			
+			public static const MODULE_ADDED : String = "testModuleAdded";
+			public static const CONTAINER_DESTROYED : String = "testContainerDestroyed";
+			
+			/**
+			 * Trigger a load of a child module.
+			 */ 
+			public function loadTestModule() : void
+			{
+				testModuleLoader.addEventListener( ModuleEvent.READY, addModule, false, 0, true );
+				testModuleLoader.loadModule( "integration/application/module/RootModuleContainer.swf" );
+			}
+			
+			/**
+			 * Unload and remove the child module.
+			 */ 
+			public function removeTestModule() : void
+			{
+				testModuleLoader.unloadModule();
+			}
+			
+			/**
+			 * Listen for the module to dispatch an event when Swiz has created the module's beans.
+			 */ 
+			private function addModule( event : Event ) : void
+			{
+				testModuleLoader.child.addEventListener( FlexEvent.CREATION_COMPLETE, moduleCreationComplete, false, 0, true );
+			}
+			
+			/**
+			 * Listen for the module to dispatch creation complete, and sets up a listener for update complete to ensure Swiz wiring is done.
+			 */ 
+			private function moduleCreationComplete( event : Event ) : void
+			{
+				testModuleLoader.child.addEventListener( FlexEvent.UPDATE_COMPLETE, moduleAdded, false, 0, true );
+			}
+			
+			/**
+			 * Trigger the module to dispatch a module-specific event defined in the module's controller.
+			 * Then dispatch a parent application event so we can test that the module can mediate it.
+			 * Finally, dispatch a MODULE_ADDED event so our other tests know it is OK to check that the module-related behavior ran successfully.
+			 */ 
+			private function moduleAdded( event : Event ) : void
+			{
+				RootModuleContainer( testModuleLoader.child ).triggerModuleEvent();
+				dispatchEvent( new SimpleTestEvent( SimpleTestEvent.GENERIC_EVENT ) );
+				dispatchEvent( new Event( MODULE_ADDED, true ) );
+			}
+			
+			[PreDestroy]
+			public function onDestroy() : void
+			{
+				dispatchEvent( new Event( CONTAINER_DESTROYED, true ) );
+			}
+			
+			protected function group1_removedFromStageHandler(event:Event):void
+			{
+				// TODO Auto-generated method stub
+				
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<fx:Declarations>
+		<swiz:Swiz id="mySwiz">
+			<swiz:config>
+				<swiz:SwizConfig id="mySwizConfig"
+								 eventPackages="integration.application.event.*"
+								 viewPackages="integration.application.view.*" />
+			</swiz:config>
+			<swiz:beanProviders>
+				<config:Beans/>
+			</swiz:beanProviders>
+			<swiz:loggingTargets>
+				<swiz:SwizTraceTarget id="myTraceTarget" />
+			</swiz:loggingTargets>	
+		</swiz:Swiz>	
+	</fx:Declarations>
+	
+	<s:layout>
+		<s:VerticalLayout />
+	</s:layout>
+	
+	<view:SimpleCanvas id="simpleCanvas" />
+	<mx:ModuleLoader id="testModuleLoader" />
+	
+</s:Group>

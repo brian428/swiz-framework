@@ -17,8 +17,7 @@
 			import org.flexunit.listeners.UIListener;
 			import org.flexunit.runner.FlexUnitCore;
 			
-			import testSuites.ReflectionTestsSuite;
-			import testSuites.StorageTestSuite;
+			import testSuites.*;
 			
 			private var core:FlexUnitCore;
 			
@@ -40,6 +39,8 @@
 				
 				core.run( ReflectionTestsSuite );
 				core.run( StorageTestSuite );
+				core.run( IntegrationTestSuite );
+				core.run( MetadataTestSuite );
 			}
 		]]>
 	</fx:Script>
